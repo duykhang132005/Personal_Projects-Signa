@@ -3,6 +3,8 @@ import { midiToHz } from './music.js';
 
 export const ATTACK = 0.6;
 export const RELEASE = 1.2;
+export const MAX_VOICES = 3; // chord voices (current plus fading) allowed at once
+const CULL_FADE = 0.05;      // seconds to fade out a culled voice
 const DETUNE = [-8, 0, 7];
 
 export class PadSynth {
@@ -16,6 +18,7 @@ export class PadSynth {
     this.filter.Q.value = 0.7;
     this.filter.connect(this.master).connect(this.ctx.destination);
     this.current = null;
+    this.fading = [];
   }
   resume() { return this.ctx.resume(); }
 
@@ -37,6 +40,7 @@ export class PadSynth {
   play(notes, bass) {
     const now = this.ctx.currentTime;
     this.release(now);
+    this.cull(now);
     const env = this.ctx.createGain();
     env.gain.setValueAtTime(0, now);
     env.gain.linearRampToValueAtTime(1, now + ATTACK);
@@ -54,6 +58,19 @@ export class PadSynth {
     env.gain.setValueAtTime(env.gain.value, now);
     env.gain.linearRampToValueAtTime(0, now + RELEASE);
     oscs.forEach(o => o.stop(now + RELEASE + 0.05));
+    this.fading.push({ env, oscs, endsAt: now + RELEASE + 0.05 });
     this.current = null;
+  }
+
+  // Drop finished voices, then quickly fade the oldest until under MAX_VOICES.
+  cull(now) {
+    this.fading = this.fading.filter(v => v.endsAt > now);
+    while (this.fading.length >= MAX_VOICES) {
+      const { env, oscs } = this.fading.shift();
+      env.gain.cancelScheduledValues(now);
+      env.gain.setValueAtTime(env.gain.value, now);
+      env.gain.linearRampToValueAtTime(0, now + CULL_FADE);
+      oscs.forEach(o => o.stop(now + CULL_FADE + 0.01));
+    }
   }
 }

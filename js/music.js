@@ -14,6 +14,7 @@ export const QUALITIES = {
   maj7: { ints: [0,4,7,11], suffix: 'maj7' },
   m7: { ints: [0,3,7,10], suffix: 'm7' },
   m7b5: { ints: [0,3,6,10], suffix: 'm7b5' },
+  // Roadmap placeholders (sus2, 7sus4): defined but not yet reachable from the UI.
   sus2: { ints: [0,2,7], suffix: 'sus2' },
   sus4: { ints: [0,5,7], suffix: 'sus4' },
   '7sus4': { ints: [0,5,7,10], suffix: '7sus4' },

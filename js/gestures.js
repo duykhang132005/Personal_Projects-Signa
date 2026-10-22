@@ -6,7 +6,8 @@ export const ACC_HYSTERESIS = 0.04;     // band edges widen by this once inside
 export const TILT_DEAD_ZONE_DEG = 15;   // within +/- this = upright (diatonic)
 export const TILT_THRESHOLD_DEG = 25;   // beyond this = forced quality
 export const STABLE_FRAMES = 4;         // frames a gesture must hold before it changes
-export const THUMB_EXTEND_RATIO = 1.25; // thumb tip vs IP distance from pinky MCP
+export const THUMB_OUT_RATIO = 1.05;    // thumb tip must be this much farther from pinky MCP than the IP joint
+export const THUMB_SPREAD_RATIO = 0.45; // thumb tip to index MCP must exceed this fraction of wrist to index MCP
 
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
@@ -16,8 +17,8 @@ function fingerUp(lm, tip, pip) {
 }
 
 function thumbUp(lm) {
-  return dist(lm[4], lm[17]) > dist(lm[3], lm[17]) * 1.05 &&
-         dist(lm[4], lm[5]) > dist(lm[0], lm[5]) * 0.45;
+  return dist(lm[4], lm[17]) > dist(lm[3], lm[17]) * THUMB_OUT_RATIO &&
+         dist(lm[4], lm[5]) > dist(lm[0], lm[5]) * THUMB_SPREAD_RATIO;
 }
 
 export function fingerStates(lm) {
