@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signa</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="app-header">
+  <div class="brand">
+    <span class="logo" aria-hidden="true">&#9835;</span>
+    <div>
+      <h1>Signa</h1>
+      <p class="tagline">Play warm chords with a wave of your hand.</p>
+    </div>
+  </div>
+  <div id="status" class="status-pill" role="status" aria-live="polite">Press Start to enable camera and audio.</div>
+</header>
+<main class="layout">
+  <section class="card stage-card">
+    <div id="stage">
+      <video id="video" playsinline muted></video>
+      <canvas id="overlay"></canvas>
+    </div>
+  </section>
+  <aside class="side">
+    <section class="card">
+      <h2>Start</h2>
+      <p class="hint">Turns on your camera and sound. Everything stays on your device.</p>
+      <button id="start" class="pill-btn">Start playing</button>
+    </section>
+    <section class="card">
+      <h2>Sound</h2>
+      <div class="controls">
+        <label class="field">Key
+          <select id="key">
+            <option>C</option><option>C#</option><option>D</option><option>D#</option>
+            <option>E</option><option>F</option><option>F#</option><option>G</option>
+            <option>G#</option><option>A</option><option>A#</option><option>B</option>
+          </select>
+        </label>
+        <label class="field">Mode
+          <select id="mode"><option value="major">Major</option><option value="minor">Minor</option></select>
+        </label>
+      </div>
+    </section>
+    <section class="card now" id="readout">
+      <h2>Now playing</h2>
+      <div id="chord" class="chord-name">-</div>
+      <div class="chips">
+        <span class="chip">Degree <b id="degree">-</b></span>
+        <span class="chip">Quality <b id="quality">-</b></span>
+      </div>
+      <div class="gesture-line">Gesture: <span id="gesture">-</span></div>
+    </section>
+    <section class="card">
+      <h2>Gesture cheat sheet</h2>
+      <ul class="cheats">
+        <li><span>1 to 5 fingers</span><b>Degree 1 to 5</b></li>
+        <li><span>Rock sign</span><b>Degree 6</b></li>
+        <li><span>Thumb, index, pinky</span><b>Degree 7</b></li>
+        <li><span>Fist</span><b>Mute</b></li>
+        <li><span>Tilt inward</span><b>Major</b></li>
+        <li><span>Tilt outward</span><b>Minor</b></li>
+      </ul>
+    </section>
+  </aside>
+</main>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
