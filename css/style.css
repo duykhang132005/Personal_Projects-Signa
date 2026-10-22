@@ -51,6 +51,7 @@ select {
   border: 2px solid #f1d6ca; background: #fff; cursor: pointer; transition: border-color 0.12s;
 }
 select:hover { border-color: var(--accent); }
+select:disabled { opacity: 0.45; cursor: not-allowed; border-color: #e6dcd6; }
 :focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
 .chord-name { font-size: 3rem; font-weight: 700; color: var(--accent-dark); line-height: 1.1; margin-bottom: 0.6rem; }
 .chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }

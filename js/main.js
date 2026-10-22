@@ -30,8 +30,8 @@ function update(degree, tilt) {
   const c = buildChord(keyIndex(), $('mode').value, degree, lastTilt);
   const id = c.name + c.notes.join(',');
   if (id !== playingKey) { synth.play(c.notes, c.bass); playingKey = id; }
-  $('degree').textContent = degree;
-  $('chord').textContent = c.roman + ' ' + c.name;
+  $('degree').textContent = c.free ? 'Free' : degree;
+  $('chord').textContent = c.free ? c.name : c.roman + ' ' + c.name;
   $('quality').textContent = c.source;
 }
 
@@ -75,6 +75,9 @@ $('start').addEventListener('click', async () => {
   }
 });
 
-const rekey = () => { playingKey = null; degStab.value = null; };
+const rekey = () => {
+  playingKey = null; degStab.value = null;
+  $('key').disabled = $('mode').value === 'free';
+};
 $('key').addEventListener('change', rekey);
 $('mode').addEventListener('change', rekey);

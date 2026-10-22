@@ -16,6 +16,8 @@ Signa is a browser app that turns left-hand gestures in front of your webcam int
 
 Default key is C major. Use the Key and Mode selectors to change it.
 
+Free (no key) mode: degrees 1 to 7 play the natural roots C D E F G A B. Upright or inward tilt plays major, outward tilt plays minor. The Key selector is disabled in this mode.
+
 ## Run locally
 
 The camera requires a secure context, so serve over localhost:
