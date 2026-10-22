@@ -1,5 +1,6 @@
 // Scales, diatonic chords, and naming.
 export const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const FLAT_NAMES = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
 const SCALES = { major: [0,2,4,5,7,9,11], minor: [0,2,3,5,7,8,10] };
 const ROMAN = ['I','II','III','IV','V','VI','VII'];
 const NATURALS = [0,2,4,5,7,9,11]; // C D E F G A B for Free mode
@@ -8,8 +9,22 @@ const NATURALS = [0,2,4,5,7,9,11]; // C D E F G A B for Free mode
 export const QUALITIES = {
   maj: { ints: [0,4,7], suffix: '' },
   min: { ints: [0,3,7], suffix: 'm' },
-  dim: { ints: [0,3,6], suffix: 'dim' }
+  dim: { ints: [0,3,6], suffix: 'dim' },
+  dom7: { ints: [0,4,7,10], suffix: '7' },
+  maj7: { ints: [0,4,7,11], suffix: 'maj7' },
+  m7: { ints: [0,3,7,10], suffix: 'm7' },
+  m7b5: { ints: [0,3,6,10], suffix: 'm7b5' }
 };
+
+// Upgrade a triad quality to a 7th. type: 'triad' | '7th' | 'maj7'.
+function forcedSeventh(q, type) {
+  if (type === 'triad') return q;
+  if (q === 'maj') return type === 'maj7' ? 'maj7' : 'dom7';
+  return q === 'min' ? 'm7' : 'm7b5';
+}
+
+function nameRoot(pc, acc) { return (acc < 0 ? FLAT_NAMES : NOTE_NAMES)[pc]; }
+const ACC_PREFIX = { '-1': 'b', '0': '', '1': '#' };
 
 // quality: 'maj' | 'min' | 'dim'
 function diatonicQuality(steps, deg) {
@@ -19,21 +34,28 @@ function diatonicQuality(steps, deg) {
   return fifth === 6 ? 'dim' : 'min';
 }
 
-export function buildChord(keyIndex, mode, degree, tilt, octave = 4) {
-  if (mode === 'free') return buildFreeChord(degree, tilt, octave);
+export function buildChord(keyIndex, mode, degree, tilt, octave = 4, type = 'triad', acc = 0) {
+  if (mode === 'free') return buildFreeChord(degree, tilt, octave, type, acc);
   const steps = SCALES[mode];
   const d = degree - 1;
   let quality = diatonicQuality(steps, d);
   let source = 'diatonic';
   if (tilt === 'major') { quality = 'maj'; source = 'tilt: forced major'; }
   if (tilt === 'minor') { quality = 'min'; source = 'tilt: forced minor'; }
-  const rootPc = (keyIndex + steps[d]) % 12;
-  const rootMidi = 12 * (octave + 1) + keyIndex + steps[d];
+  if (type !== 'triad') {
+    if (source === 'diatonic') {
+      const sev = (steps[(d + 6) % 7] - steps[d] + 12) % 12;
+      quality = quality === 'maj' ? (sev === 11 ? 'maj7' : 'dom7') : quality === 'min' ? 'm7' : 'm7b5';
+    } else quality = forcedSeventh(quality, type);
+  }
+  const rootPc = (keyIndex + steps[d] + acc + 12) % 12;
+  const rootMidi = 12 * (octave + 1) + keyIndex + steps[d] + acc;
   const { notes, bass } = voice(rootMidi, quality);
   let roman = ROMAN[d];
-  if (quality !== 'maj') roman = roman.toLowerCase();
+  if (quality.startsWith('m') && !quality.startsWith('maj') || quality === 'dim') roman = roman.toLowerCase();
   if (quality === 'dim') roman += 'o';
-  return { roman, name: NOTE_NAMES[rootPc] + QUALITIES[quality].suffix, notes, bass, source };
+  roman = ACC_PREFIX[acc] + roman;
+  return { roman, name: nameRoot(rootPc, acc) + QUALITIES[quality].suffix, notes, bass, source };
 }
 
 function voice(rootMidi, quality) {
@@ -41,12 +63,13 @@ function voice(rootMidi, quality) {
 }
 
 // Free mode: degree 1-7 maps to natural roots C-B; tilt outward = minor, else major.
-function buildFreeChord(degree, tilt, octave) {
-  const pc = NATURALS[degree - 1];
-  const quality = tilt === 'minor' ? 'min' : 'maj';
-  const { notes, bass } = voice(12 * (octave + 1) + pc, quality);
+function buildFreeChord(degree, tilt, octave, type, acc) {
+  const raw = NATURALS[degree - 1] + acc;
+  const pc = (raw + 12) % 12;
+  const quality = forcedSeventh(tilt === 'minor' ? 'min' : 'maj', type);
+  const { notes, bass } = voice(12 * (octave + 1) + raw, quality);
   const source = tilt === 'minor' ? 'Free: tilt minor' : 'Free: major';
-  return { roman: 'Free', name: NOTE_NAMES[pc] + QUALITIES[quality].suffix, notes, bass, source, free: true };
+  return { roman: 'Free', name: nameRoot(pc, acc) + QUALITIES[quality].suffix, notes, bass, source, free: true };
 }
 
 export const midiToHz = (m) => 440 * Math.pow(2, (m - 69) / 12);

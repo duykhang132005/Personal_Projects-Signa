@@ -45,6 +45,7 @@ h1 { margin: 0; font-size: 1.8rem; letter-spacing: -0.02em; }
 .pill-btn:active { transform: translateY(1px); box-shadow: 0 2px 6px rgba(201, 76, 55, 0.3); }
 .pill-btn:disabled { background: #b9aeb3; box-shadow: none; cursor: default; transform: none; }
 .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.controls .field:last-child { grid-column: 1 / -1; }
 .field { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.9rem; font-weight: 600; color: var(--muted); }
 select {
   font: inherit; font-size: 1rem; color: var(--ink); padding: 0.55rem 0.8rem; border-radius: 0.75rem;

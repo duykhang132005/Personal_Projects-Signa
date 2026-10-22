@@ -1,5 +1,5 @@
 import { createHandTracker, findUserLeftHand, drawHands } from './hands.js';
-import { classifyDegree, classifyTilt, Stabilizer } from './gestures.js';
+import { classifyDegree, classifyTilt, classifyAccidental, Stabilizer } from './gestures.js';
 import { buildChord, NOTE_NAMES } from './music.js';
 import { PadSynth } from './synth.js';
 
@@ -12,12 +12,14 @@ const status = (t) => { $('status').textContent = t; };
 let synth, tracker;
 const degStab = new Stabilizer();
 const tiltStab = new Stabilizer();
+const accStab = new Stabilizer();
+const ACC_LABEL = { '-1': 'flat', '0': 'natural', '1': 'sharp' };
 let lastTilt = 'diatonic';
 let playingKey = null;
 
 function keyIndex() { return NOTE_NAMES.indexOf($('key').value); }
 
-function update(degree, tilt) {
+function update(degree, tilt, acc) {
   if (tilt !== 'hold' && tilt != null) lastTilt = tilt;
   if (degree == null) return;
   if (degree === 0) {
@@ -27,12 +29,12 @@ function update(degree, tilt) {
     $('quality').textContent = '-';
     return;
   }
-  const c = buildChord(keyIndex(), $('mode').value, degree, lastTilt);
+  const c = buildChord(keyIndex(), $('mode').value, degree, lastTilt, 4, $('ctype').value, acc || 0);
   const id = c.name + c.notes.join(',');
   if (id !== playingKey) { synth.play(c.notes, c.bass); playingKey = id; }
   $('degree').textContent = c.free ? 'Free' : degree;
   $('chord').textContent = c.free ? c.name : c.roman + ' ' + c.name;
-  $('quality').textContent = c.source;
+  $('quality').textContent = c.source + (acc ? ', ' + ACC_LABEL[acc] : '');
 }
 
 let lastTime = -1;
@@ -45,8 +47,9 @@ function loop() {
     if (left) {
       const raw = classifyDegree(left);
       const t = classifyTilt(left);
-      $('gesture').textContent = (raw === 0 ? 'fist' : raw) + ' / ' + t.tilt + ' (' + t.deg.toFixed(0) + ' deg)';
-      update(degStab.push(raw), tiltStab.push(t.tilt));
+      const a = classifyAccidental(left, accStab.value || 0);
+      $('gesture').textContent = (raw === 0 ? 'fist' : raw) + ' / ' + t.tilt + ' (' + t.deg.toFixed(0) + ' deg) / ' + ACC_LABEL[a];
+      update(degStab.push(raw), tiltStab.push(t.tilt), accStab.push(a));
     } else {
       $('gesture').textContent = 'no left hand';
     }
@@ -81,3 +84,4 @@ const rekey = () => {
 };
 $('key').addEventListener('change', rekey);
 $('mode').addEventListener('change', rekey);
+$('ctype').addEventListener('change', rekey);

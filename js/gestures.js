@@ -1,4 +1,8 @@
 // Gesture classification for the user's left hand.
+// Accidental bands from palm-center normalized y (0 = top of frame).
+export const SHARP_Y = 0.35;            // above = sharp
+export const FLAT_Y = 0.65;             // below = flat
+export const ACC_HYSTERESIS = 0.04;     // band edges widen by this once inside
 export const TILT_DEAD_ZONE_DEG = 15;   // within +/- this = upright (diatonic)
 export const TILT_THRESHOLD_DEG = 25;   // beyond this = forced quality
 export const STABLE_FRAMES = 4;         // frames a gesture must hold before it changes
@@ -46,6 +50,15 @@ export function classifyTilt(lm) {
   if (deg <= -TILT_THRESHOLD_DEG) return { tilt: 'major', deg };
   if (deg >= TILT_THRESHOLD_DEG) return { tilt: 'minor', deg };
   return { tilt: 'hold', deg };
+}
+
+// Returns 1 (sharp), -1 (flat), or 0 (natural). prev = last stable value.
+export function classifyAccidental(lm, prev = 0) {
+  const y = (lm[0].y + lm[5].y + lm[17].y) / 3;
+  const h = ACC_HYSTERESIS / 2;
+  if (y < SHARP_Y + (prev === 1 ? h : -h)) return 1;
+  if (y > FLAT_Y - (prev === -1 ? h : -h)) return -1;
+  return 0;
 }
 
 export class Stabilizer {

@@ -13,6 +13,11 @@ Signa is a browser app that turns left-hand gestures in front of your webcam int
 | Hand upright | Diatonic chord for the degree |
 | Tilt inward (toward body center) | Force major |
 | Tilt outward | Force minor |
+| Hand in top band of the frame | Sharp (root up a semitone) |
+| Hand in middle band | Natural |
+| Hand in bottom band | Flat (root down a semitone) |
+
+Chord type: Triad plays 3-note chords. 7th plays diatonic 7ths when upright (I maj7, ii m7, iii m7, IV maj7, V7, vi m7, vii m7b5), dominant 7 for forced or Free major, and m7 for minor. Maj7 is the same but uses maj7 for forced or Free major. Accidentals keep the chord quality and only move the root.
 
 Default key is C major. Use the Key and Mode selectors to change it.
 

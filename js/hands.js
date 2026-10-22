@@ -1,4 +1,5 @@
 // MediaPipe HandLandmarker wrapper (loaded from CDN).
+import { SHARP_Y, FLAT_Y } from './gestures.js';
 const VISION_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
 const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
 
@@ -33,10 +34,30 @@ export function findUserLeftHand(result) {
 const LINKS = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],
   [9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
 
+// Faint accidental guide lines. Text is flipped back so it reads correctly.
+function drawBands(ctx, w, h) {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.setLineDash([8, 8]);
+  ctx.lineWidth = 1;
+  for (const y of [SHARP_Y, FLAT_Y]) {
+    ctx.beginPath(); ctx.moveTo(0, y * h); ctx.lineTo(w, y * h); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.scale(-1, 1);
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.font = '16px system-ui, sans-serif';
+  ctx.fillText('sharp #', -w + 10, SHARP_Y * h - 8);
+  ctx.fillText('natural', -w + 10, (SHARP_Y + FLAT_Y) / 2 * h);
+  ctx.fillText('flat b', -w + 10, FLAT_Y * h + 22);
+  ctx.restore();
+}
+
 // Canvas is mirrored via CSS, so draw in raw image coordinates.
 export function drawHands(ctx, result, leftHand) {
   const { width: w, height: h } = ctx.canvas;
   ctx.clearRect(0, 0, w, h);
+  drawBands(ctx, w, h);
   if (!result || !result.landmarks) return;
   for (const lm of result.landmarks) {
     const isLeft = lm === leftHand;
