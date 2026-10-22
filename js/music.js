@@ -13,8 +13,22 @@ export const QUALITIES = {
   dom7: { ints: [0,4,7,10], suffix: '7' },
   maj7: { ints: [0,4,7,11], suffix: 'maj7' },
   m7: { ints: [0,3,7,10], suffix: 'm7' },
-  m7b5: { ints: [0,3,6,10], suffix: 'm7b5' }
+  m7b5: { ints: [0,3,6,10], suffix: 'm7b5' },
+  sus2: { ints: [0,2,7], suffix: 'sus2' },
+  sus4: { ints: [0,5,7], suffix: 'sus4' },
+  '7sus4': { ints: [0,5,7,10], suffix: '7sus4' },
+  add9: { ints: [0,4,7,14], suffix: 'add9' },
+  madd9: { ints: [0,3,7,14], suffix: 'madd9' }
 };
+
+// Right-hand modifiers override the Chord type picker. mod: null | 'sus4' | 'add9'.
+function applyModifier(q, mod) {
+  if (mod === 'sus4') return 'sus4';
+  return q === 'maj' ? 'add9' : 'madd9';
+}
+
+// Chord types that replace the third regardless of tilt.
+const SUS_TYPES = { sus2: 'sus2', sus4: 'sus4' };
 
 // Upgrade a triad quality to a 7th. type: 'triad' | '7th' | 'maj7'.
 function forcedSeventh(q, type) {
@@ -34,15 +48,17 @@ function diatonicQuality(steps, deg) {
   return fifth === 6 ? 'dim' : 'min';
 }
 
-export function buildChord(keyIndex, mode, degree, tilt, octave = 4, type = 'triad', acc = 0) {
-  if (mode === 'free') return buildFreeChord(degree, tilt, octave, type, acc);
+export function buildChord(keyIndex, mode, degree, tilt, octave = 4, type = 'triad', acc = 0, mod = null) {
+  if (mode === 'free') return buildFreeChord(degree, tilt, octave, type, acc, mod);
   const steps = SCALES[mode];
   const d = degree - 1;
   let quality = diatonicQuality(steps, d);
   let source = 'diatonic';
   if (tilt === 'major') { quality = 'maj'; source = 'tilt: forced major'; }
   if (tilt === 'minor') { quality = 'min'; source = 'tilt: forced minor'; }
-  if (type !== 'triad') {
+  if (mod) { quality = applyModifier(quality, mod); source = mod === 'sus4' ? 'sus' : source; source += ', R: ' + mod; }
+  else if (SUS_TYPES[type]) { quality = SUS_TYPES[type]; source = 'sus'; }
+  else if (type !== 'triad') {
     if (source === 'diatonic') {
       const sev = (steps[(d + 6) % 7] - steps[d] + 12) % 12;
       quality = quality === 'maj' ? (sev === 11 ? 'maj7' : 'dom7') : quality === 'min' ? 'm7' : 'm7b5';
@@ -63,12 +79,13 @@ function voice(rootMidi, quality) {
 }
 
 // Free mode: degree 1-7 maps to natural roots C-B; tilt outward = minor, else major.
-function buildFreeChord(degree, tilt, octave, type, acc) {
+function buildFreeChord(degree, tilt, octave, type, acc, mod) {
   const raw = NATURALS[degree - 1] + acc;
   const pc = (raw + 12) % 12;
-  const quality = forcedSeventh(tilt === 'minor' ? 'min' : 'maj', type);
+  const base = tilt === 'minor' ? 'min' : 'maj';
+  const quality = mod ? applyModifier(base, mod) : SUS_TYPES[type] || forcedSeventh(base, type);
   const { notes, bass } = voice(12 * (octave + 1) + raw, quality);
-  const source = tilt === 'minor' ? 'Free: tilt minor' : 'Free: major';
+  const source = mod ? 'R: ' + mod : SUS_TYPES[type] ? 'sus' : tilt === 'minor' ? 'Free: tilt minor' : 'Free: major';
   return { roman: 'Free', name: nameRoot(pc, acc) + QUALITIES[quality].suffix, notes, bass, source, free: true };
 }
 

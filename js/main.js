@@ -1,5 +1,5 @@
-import { createHandTracker, findUserLeftHand, drawHands } from './hands.js';
-import { classifyDegree, classifyTilt, classifyAccidental, Stabilizer } from './gestures.js';
+import { createHandTracker, findUserLeftHand, findUserRightHand, drawHands } from './hands.js';
+import { classifyDegree, classifyTilt, classifyAccidental, classifyModifier, Stabilizer } from './gestures.js';
 import { buildChord, NOTE_NAMES } from './music.js';
 import { PadSynth } from './synth.js';
 
@@ -13,13 +13,14 @@ let synth, tracker;
 const degStab = new Stabilizer();
 const tiltStab = new Stabilizer();
 const accStab = new Stabilizer();
+const modStab = new Stabilizer();
 const ACC_LABEL = { '-1': 'flat', '0': 'natural', '1': 'sharp' };
 let lastTilt = 'diatonic';
 let playingKey = null;
 
 function keyIndex() { return NOTE_NAMES.indexOf($('key').value); }
 
-function update(degree, tilt, acc) {
+function update(degree, tilt, acc, mod) {
   if (tilt !== 'hold' && tilt != null) lastTilt = tilt;
   if (degree == null) return;
   if (degree === 0) {
@@ -29,10 +30,10 @@ function update(degree, tilt, acc) {
     $('quality').textContent = '-';
     return;
   }
-  const c = buildChord(keyIndex(), $('mode').value, degree, lastTilt, 4, $('ctype').value, acc || 0);
+  const c = buildChord(keyIndex(), $('mode').value, degree, lastTilt, 4, $('ctype').value, acc || 0, mod || null);
   const id = c.name + c.notes.join(',');
   if (id !== playingKey) { synth.play(c.notes, c.bass); playingKey = id; }
-  $('degree').textContent = c.free ? 'Free' : degree;
+  $('degree').textContent = c.free ? 'Free' + (acc ? ' ' + (acc > 0 ? '#' : 'b') : '') : degree;
   $('chord').textContent = c.free ? c.name : c.roman + ' ' + c.name;
   $('quality').textContent = c.source + (acc ? ', ' + ACC_LABEL[acc] : '');
 }
@@ -43,13 +44,15 @@ function loop() {
     lastTime = video.currentTime;
     const result = tracker.detectForVideo(video, performance.now());
     const left = findUserLeftHand(result);
-    drawHands(ctx, result, left);
+    const right = findUserRightHand(result);
+    drawHands(ctx, result, left, right);
+    const m = modStab.push(classifyModifier(right));
     if (left) {
       const raw = classifyDegree(left);
       const t = classifyTilt(left);
       const a = classifyAccidental(left, accStab.value || 0);
-      $('gesture').textContent = (raw === 0 ? 'fist' : raw) + ' / ' + t.tilt + ' (' + t.deg.toFixed(0) + ' deg) / ' + ACC_LABEL[a];
-      update(degStab.push(raw), tiltStab.push(t.tilt), accStab.push(a));
+      $('gesture').textContent = (raw === 0 ? 'fist' : raw) + ' / ' + t.tilt + ' (' + t.deg.toFixed(0) + ' deg) / ' + ACC_LABEL[a] + ' / R: ' + (m || 'none');
+      update(degStab.push(raw), tiltStab.push(t.tilt), accStab.push(a), m);
     } else {
       $('gesture').textContent = 'no left hand';
     }
@@ -85,3 +88,5 @@ const rekey = () => {
 $('key').addEventListener('change', rekey);
 $('mode').addEventListener('change', rekey);
 $('ctype').addEventListener('change', rekey);
+rekey();
+window.addEventListener('pageshow', rekey);

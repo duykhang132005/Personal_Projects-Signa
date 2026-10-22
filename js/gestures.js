@@ -30,6 +30,13 @@ export function fingerStates(lm) {
   };
 }
 
+// Right-hand modifier: exactly 4 fingers = sus4, exactly 2 = add9, else none.
+export function classifyModifier(lm) {
+  if (!lm) return null;
+  const n = Object.values(fingerStates(lm)).filter(Boolean).length;
+  return n === 4 ? 'sus4' : n === 2 ? 'add9' : null;
+}
+
 // Returns 0 for fist (mute), 1-7 for degrees, or null if unclear.
 export function classifyDegree(lm) {
   const f = fingerStates(lm);

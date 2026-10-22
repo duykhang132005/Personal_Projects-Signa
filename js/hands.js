@@ -22,6 +22,15 @@ export async function createHandTracker() {
 // frames are not mirrored, so the label is swapped: "Right" means the user's left hand.
 export const USER_LEFT_LABEL = 'Right';
 
+export function findUserRightHand(result) {
+  if (!result || !result.landmarks) return null;
+  for (let i = 0; i < result.landmarks.length; i++) {
+    const h = result.handedness[i] && result.handedness[i][0];
+    if (h && h.categoryName !== USER_LEFT_LABEL) return result.landmarks[i];
+  }
+  return null;
+}
+
 export function findUserLeftHand(result) {
   if (!result || !result.landmarks) return null;
   for (let i = 0; i < result.landmarks.length; i++) {
@@ -54,22 +63,23 @@ function drawBands(ctx, w, h) {
 }
 
 // Canvas is mirrored via CSS, so draw in raw image coordinates.
-export function drawHands(ctx, result, leftHand) {
+export function drawHands(ctx, result, leftHand, rightHand) {
   const { width: w, height: h } = ctx.canvas;
   ctx.clearRect(0, 0, w, h);
   drawBands(ctx, w, h);
   if (!result || !result.landmarks) return;
   for (const lm of result.landmarks) {
     const isLeft = lm === leftHand;
-    ctx.strokeStyle = isLeft ? '#7fd' : '#666';
-    ctx.lineWidth = isLeft ? 3 : 2;
+    const isRight = lm === rightHand;
+    ctx.strokeStyle = isLeft ? '#7fd' : isRight ? '#ffa94d' : '#666';
+    ctx.lineWidth = isLeft || isRight ? 3 : 2;
     ctx.beginPath();
     for (const [a, b] of LINKS) {
       ctx.moveTo(lm[a].x * w, lm[a].y * h);
       ctx.lineTo(lm[b].x * w, lm[b].y * h);
     }
     ctx.stroke();
-    ctx.fillStyle = isLeft ? '#fff' : '#999';
+    ctx.fillStyle = isLeft ? '#fff' : isRight ? '#ffe0c2' : '#999';
     for (const p of lm) {
       ctx.beginPath();
       ctx.arc(p.x * w, p.y * h, 3, 0, Math.PI * 2);
