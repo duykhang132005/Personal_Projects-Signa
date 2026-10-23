@@ -1,7 +1,7 @@
 // Gesture classification for the user's left hand.
 // Accidental bands from palm-center normalized y (0 = top of frame).
-export const SHARP_Y = 0.35;            // above = sharp
-export const FLAT_Y = 0.65;             // below = flat
+export const SHARP_Y = 0.50;            // above = sharp
+export const FLAT_Y = 0.80;             // below = flat
 export const ACC_HYSTERESIS = 0.04;     // band edges widen by this once inside
 export const TILT_DEAD_ZONE_DEG = 15;   // within +/- this = upright (diatonic)
 export const TILT_THRESHOLD_DEG = 25;   // beyond this = forced quality
@@ -31,11 +31,14 @@ export function fingerStates(lm) {
   };
 }
 
-// Right-hand modifier: exactly 4 fingers = sus4, exactly 2 = add9, else none.
+// Quality hand (code's 'right' hand): returns a QUALITIES key, or null if absent.
+const COUNT_QUALITY = ['maj', 'min', 'add9', 'maj', 'sus4', 'dom7'];
 export function classifyModifier(lm) {
   if (!lm) return null;
-  const n = Object.values(fingerStates(lm)).filter(Boolean).length;
-  return n === 4 ? 'sus4' : n === 2 ? 'add9' : null;
+  const f = fingerStates(lm);
+  // Special shape first: index + ring + pinky up, thumb and middle down.
+  if (f.index && f.ring && f.pinky && !f.thumb && !f.middle) return 'm7b5';
+  return COUNT_QUALITY[Object.values(f).filter(Boolean).length];
 }
 
 // Returns 0 for fist (mute), 1-7 for degrees, or null if unclear.

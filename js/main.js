@@ -51,7 +51,7 @@ function loop() {
       const raw = classifyDegree(left);
       const t = classifyTilt(left);
       const a = classifyAccidental(left, accStab.value || 0);
-      $('gesture').textContent = (raw === 0 ? 'fist' : raw) + ' / ' + t.tilt + ' (' + t.deg.toFixed(0) + ' deg) / ' + ACC_LABEL[a] + ' / R: ' + (m || 'none');
+      $('gesture').textContent = (raw === 0 ? 'fist' : raw) + ' / ' + t.tilt + ' (' + t.deg.toFixed(0) + ' deg) / ' + ACC_LABEL[a] + ' / Hand: ' + (m || 'none');
       update(degStab.push(raw), tiltStab.push(t.tilt), accStab.push(a), m);
     } else {
       $('gesture').textContent = 'no left hand';

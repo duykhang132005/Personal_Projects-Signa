@@ -22,11 +22,8 @@ export const QUALITIES = {
   madd9: { ints: [0,3,7,14], suffix: 'madd9' }
 };
 
-// Right-hand modifiers override the Chord type picker. mod: null | 'sus4' | 'add9'.
-function applyModifier(q, mod) {
-  if (mod === 'sus4') return 'sus4';
-  return q === 'maj' ? 'add9' : 'madd9';
-}
+// Quality-hand value (a QUALITIES key) overrides tilt and the Chord type picker.
+// mod: null when the quality hand is absent.
 
 // Chord types that replace the third regardless of tilt.
 const SUS_TYPES = { sus2: 'sus2', sus4: 'sus4' };
@@ -57,7 +54,7 @@ export function buildChord(keyIndex, mode, degree, tilt, octave = 4, type = 'tri
   let source = 'diatonic';
   if (tilt === 'major') { quality = 'maj'; source = 'tilt: forced major'; }
   if (tilt === 'minor') { quality = 'min'; source = 'tilt: forced minor'; }
-  if (mod) { quality = applyModifier(quality, mod); source = mod === 'sus4' ? 'sus' : source; source += ', R: ' + mod; }
+  if (mod) { quality = mod; source = 'hand: ' + mod; }
   else if (SUS_TYPES[type]) { quality = SUS_TYPES[type]; source = 'sus'; }
   else if (type !== 'triad') {
     if (source === 'diatonic') {
@@ -84,9 +81,9 @@ function buildFreeChord(degree, tilt, octave, type, acc, mod) {
   const raw = NATURALS[degree - 1] + acc;
   const pc = (raw + 12) % 12;
   const base = tilt === 'minor' ? 'min' : 'maj';
-  const quality = mod ? applyModifier(base, mod) : SUS_TYPES[type] || forcedSeventh(base, type);
+  const quality = mod ? mod : SUS_TYPES[type] || forcedSeventh(base, type);
   const { notes, bass } = voice(12 * (octave + 1) + raw, quality);
-  const source = mod ? 'R: ' + mod : SUS_TYPES[type] ? 'sus' : tilt === 'minor' ? 'Free: tilt minor' : 'Free: major';
+  const source = mod ? 'hand: ' + mod : SUS_TYPES[type] ? 'sus' : tilt === 'minor' ? 'Free: tilt minor' : 'Free: major';
   return { roman: 'Free', name: nameRoot(pc, acc) + QUALITIES[quality].suffix, notes, bass, source, free: true };
 }
 
