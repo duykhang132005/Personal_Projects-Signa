@@ -29,7 +29,9 @@ Signa is a browser app that turns left-hand gestures in front of your webcam int
 | Index + ring + pinky (thumb and middle down) | m7b5 |
 | Absent | Fall back to tilt and Chord type |
 
-Chord type: Triad plays 3-note chords. 7th plays diatonic 7ths when upright (I maj7, ii m7, iii m7, IV maj7, V7, vi m7, vii m7b5), dominant 7 for forced or Free major, and m7 for minor. Maj7 is the same but uses maj7 for forced or Free major. Accidentals keep the chord quality and only move the root. Sus4 replaces the third in every chord and ignores tilt; accidentals still apply. When the quality hand is visible it sets the quality and overrides both tilt and the Chord type picker; accidentals still apply. With it out of frame, tilt and the picker work as before.
+Chord type: Triad plays 3-note chords. 7th plays diatonic 7ths when upright (I maj7, ii m7, iii m7, IV maj7, V7, vi m7, vii m7b5), dominant 7 for forced or Free major, and m7 for minor. Maj7 is the same but uses maj7 for forced or Free major. Accidentals keep the chord quality and only move the root. Sus4 replaces the third in every chord and ignores tilt; accidentals still apply. When the quality hand is visible it sets the quality and overrides both tilt and the Chord type picker; accidentals still apply. With it out of frame, tilt and the picker work as before. A "Quality hand" badge appears next to the chord while it is in control. The m7b5 shape must be held for 8 frames (other shapes 4) so it is not triggered by accident.
+
+Inversion (Sound card, default Off): Off plays root position exactly as before. 1st, 2nd and 3rd raise the lowest chord tones by an octave (3rd only applies to 4-note chords and is clamped otherwise). Voice leading picks the inversion closest to the previous chord so chords move smoothly. Inverted chords show the bass as a slash chord, e.g. C/E, and the bass note follows the lowest chord tone.
 
 Default key is C major. Use the Key and Mode selectors to change it.
 
@@ -50,6 +52,8 @@ npx serve .
 ```
 
 Then open http://localhost:8000 (or the URL `serve` prints) and press Start. Allow camera access.
+
+If the status says the camera needs a secure page, open http://localhost:8000 instead of the Network IP address that `serve` also prints. Tracking and sound pause while the tab is hidden.
 
 ## Privacy
 

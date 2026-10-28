@@ -14,7 +14,7 @@ export const QUALITIES = {
   maj7: { ints: [0,4,7,11], suffix: 'maj7' },
   m7: { ints: [0,3,7,10], suffix: 'm7' },
   m7b5: { ints: [0,3,6,10], suffix: 'm7b5' },
-  // Roadmap placeholders (sus2, 7sus4): defined but not yet reachable from the UI.
+  // Roadmap placeholders (sus2, 7sus4, madd9): defined but not yet reachable from the UI.
   sus2: { ints: [0,2,7], suffix: 'sus2' },
   sus4: { ints: [0,5,7], suffix: 'sus4' },
   '7sus4': { ints: [0,5,7,10], suffix: '7sus4' },
@@ -69,7 +69,7 @@ export function buildChord(keyIndex, mode, degree, tilt, octave = 4, type = 'tri
   if (quality.startsWith('m') && !quality.startsWith('maj') || quality === 'dim') roman = roman.toLowerCase();
   if (quality === 'dim') roman += 'o';
   roman = ACC_PREFIX[acc] + roman;
-  return { roman, name: nameRoot(rootPc, acc) + QUALITIES[quality].suffix, notes, bass, source };
+  return { roman, name: nameRoot(rootPc, acc) + QUALITIES[quality].suffix, notes, bass, source, acc };
 }
 
 function voice(rootMidi, quality) {
@@ -84,7 +84,45 @@ function buildFreeChord(degree, tilt, octave, type, acc, mod) {
   const quality = mod ? mod : SUS_TYPES[type] || forcedSeventh(base, type);
   const { notes, bass } = voice(12 * (octave + 1) + raw, quality);
   const source = mod ? 'hand: ' + mod : SUS_TYPES[type] ? 'sus' : tilt === 'minor' ? 'Free: tilt minor' : 'Free: major';
-  return { roman: 'Free', name: nameRoot(pc, acc) + QUALITIES[quality].suffix, notes, bass, source, free: true };
+  return { roman: 'Free', name: nameRoot(pc, acc) + QUALITIES[quality].suffix, notes, bass, source, free: true, acc };
+}
+
+// Inversions. mode: 'off' | '1' | '2' | '3' | 'voice'. Off returns the chord unchanged.
+// Inversion n raises the n lowest chord tones by an octave (clamped to notes - 1).
+function rotate(notes, n) {
+  const out = notes.slice().sort((a, b) => a - b);
+  for (let i = 0; i < n; i++) out.push(out.shift() + 12);
+  return out;
+}
+
+// Distance from each note to the nearest previous note.
+function moveCost(notes, prev) {
+  return notes.reduce((s, n) => s + Math.min(...prev.map(p => Math.abs(p - n))), 0);
+}
+
+export function invertChord(c, mode, prevNotes) {
+  if (mode === 'off') return c;
+  const max = c.notes.length - 1;
+  let notes;
+  if (mode === 'voice') {
+    if (!prevNotes || !prevNotes.length) return c;
+    let best = null, bestCost = Infinity;
+    for (let n = 0; n <= max; n++) {
+      for (const shift of [-12, 0]) {
+        const cand = rotate(c.notes, n).map(x => x + shift);
+        const cost = moveCost(cand, prevNotes);
+        if (cost < bestCost) { bestCost = cost; best = cand; }
+      }
+    }
+    notes = best;
+  } else {
+    notes = rotate(c.notes, Math.min(Number(mode), max));
+  }
+  const rootPc = (c.bass % 12 + 12) % 12;
+  const lowPc = (notes[0] % 12 + 12) % 12;
+  const bass = notes[0] - 12; // bass doubles the lowest chord tone an octave down
+  const name = lowPc === rootPc ? c.name : c.name + '/' + nameRoot(lowPc, c.acc);
+  return { ...c, notes, bass, name };
 }
 
 export const midiToHz = (m) => 440 * Math.pow(2, (m - 69) / 12);

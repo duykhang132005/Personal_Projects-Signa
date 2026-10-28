@@ -46,11 +46,17 @@
         <label class="field">Chord type
           <select id="ctype"><option value="triad">Triad</option><option value="7th">7th</option><option value="maj7">Maj7</option><option value="sus4">Sus4</option></select>
         </label>
+        <label class="field">Inversion
+          <select id="inv"><option value="off">Off</option><option value="1">1st</option><option value="2">2nd</option><option value="3">3rd (7ths)</option><option value="voice">Voice leading</option></select>
+        </label>
       </div>
     </section>
     <section class="card now" id="readout">
       <h2>Now playing</h2>
-      <div id="chord" class="chord-name">-</div>
+      <div class="chord-row">
+        <div id="chord" class="chord-name">-</div>
+        <span id="qbadge" class="badge" hidden>Quality hand</span>
+      </div>
       <div class="chips">
         <span class="chip">Degree <b id="degree">-</b></span>
         <span class="chip">Quality <b id="quality">-</b></span>
@@ -72,7 +78,8 @@
         <li><span>Quality hand: 2</span><b>add9</b></li>
         <li><span>Quality hand: 4</span><b>sus4</b></li>
         <li><span>Quality hand: 5</span><b>7</b></li>
-        <li><span>Index, ring, pinky</span><b>m7b5</b></li>
+        <li><span>Index, ring, pinky (hold)</span><b>m7b5</b></li>
+        <li><span>Inversion selector</span><b>Off / 1st / 2nd / 3rd / Voice leading</b></li>
       </ul>
     </section>
   </aside>

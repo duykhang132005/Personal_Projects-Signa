@@ -5,6 +5,7 @@ export const FLAT_Y = 0.80;             // below = flat
 export const ACC_HYSTERESIS = 0.04;     // band edges widen by this once inside
 export const TILT_DEAD_ZONE_DEG = 15;   // within +/- this = upright (diatonic)
 export const TILT_THRESHOLD_DEG = 25;   // beyond this = forced quality
+export const M7B5_STABLE_FRAMES = 8;    // m7b5 shape must hold longer (easy to hit by accident)
 export const STABLE_FRAMES = 4;         // frames a gesture must hold before it changes
 export const THUMB_OUT_RATIO = 1.05;    // thumb tip must be this much farther from pinky MCP than the IP joint
 export const THUMB_SPREAD_RATIO = 0.45; // thumb tip to index MCP must exceed this fraction of wrist to index MCP
@@ -73,10 +74,14 @@ export function classifyAccidental(lm, prev = 0) {
 }
 
 export class Stabilizer {
-  constructor(frames = STABLE_FRAMES) { this.frames = frames; this.cand = null; this.count = 0; this.value = null; }
+  // overrides: optional { value: frames } for values that need a longer hold.
+  constructor(frames = STABLE_FRAMES, overrides = {}) {
+    this.frames = frames; this.overrides = overrides; this.cand = null; this.count = 0; this.value = null;
+  }
   push(v) {
     if (v === this.cand) this.count++; else { this.cand = v; this.count = 1; }
-    if (this.count >= this.frames) this.value = this.cand;
+    const need = this.overrides[v] !== undefined ? this.overrides[v] : this.frames;
+    if (this.count >= need) this.value = this.cand;
     return this.value;
   }
 }
