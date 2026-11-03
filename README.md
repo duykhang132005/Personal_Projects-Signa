@@ -1,8 +1,12 @@
 # Signa
 
-Signa is a browser app that turns left-hand gestures in front of your webcam into sustained pad chords. It is an original implementation inspired by the Air Chord idea; no code or assets were copied from other projects.
+Signa is a browser app that turns hand gestures in front of your webcam into sustained pad chords. It is an original implementation inspired by the Air Chord idea; no code or assets were copied from other projects.
 
-## Gestures (left hand)
+## Gestures
+
+Signa tracks two hands by role. The chord hand is drawn cyan on the overlay and picks the degree, tilt and accidental. The quality hand is drawn orange and sets the chord quality. Because the camera view is mirrored, go by the overlay color rather than left or right.
+
+### Chord hand (cyan)
 
 | Gesture | Result |
 | --- | --- |
@@ -10,14 +14,14 @@ Signa is a browser app that turns left-hand gestures in front of your webcam int
 | Rock sign (index + pinky, thumb tucked) | Degree 6 |
 | I-love-you sign (thumb + index + pinky) | Degree 7 |
 | Fist | Mute (release) |
-| Hand upright | Diatonic chord for the degree |
+| Chord hand upright | Diatonic chord for the degree |
 | Tilt inward (toward body center) | Force major |
 | Tilt outward | Force minor |
-| Hand in top band of the frame | Sharp (root up a semitone) |
-| Hand in middle band | Natural |
-| Hand in bottom band | Flat (root down a semitone) |
+| Chord hand in top band of the frame | Sharp (root up a semitone) |
+| Chord hand in middle band | Natural |
+| Chord hand in bottom band | Flat (root down a semitone) |
 
-### Quality hand (the second hand, drawn orange)
+### Quality hand (orange)
 
 | Shape | Quality |
 | --- | --- |
@@ -53,7 +57,7 @@ npx serve .
 
 Then open http://localhost:8000 (or the URL `serve` prints) and press Start. Allow camera access.
 
-If the status says the camera needs a secure page, open http://localhost:8000 instead of the Network IP address that `serve` also prints. Tracking and sound pause while the tab is hidden.
+If the status says the camera needs a secure page, open http://localhost:8000 instead of the Network IP address that `serve` also prints. Tracking and sound pause while the tab is hidden. Key, Mode, Chord type and Inversion are saved in your browser (localStorage) and restored on the next visit; Inversion starts Off on a first visit.
 
 ## Privacy
 

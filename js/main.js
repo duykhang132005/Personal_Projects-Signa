@@ -70,10 +70,10 @@ function loop() {
       const raw = classifyDegree(left);
       const t = classifyTilt(left);
       const a = classifyAccidental(left, accStab.value || 0);
-      $('gesture').textContent = (raw === 0 ? 'fist' : raw) + ' / ' + t.tilt + ' (' + t.deg.toFixed(0) + ' deg) / ' + ACC_LABEL[a] + ' / Hand: ' + (m || 'none');
+      $('gesture').textContent = (raw === 0 ? 'fist' : raw) + ' / ' + t.tilt + ' (' + t.deg.toFixed(0) + ' deg) / ' + ACC_LABEL[a] + ' / Quality hand (orange): ' + (m || 'none');
       update(degStab.push(raw), tiltStab.push(t.tilt), accStab.push(a), m);
     } else {
-      $('gesture').textContent = 'no left hand';
+      $('gesture').textContent = 'no chord hand';
     }
   }
   rafId = requestAnimationFrame(loop);
@@ -97,7 +97,7 @@ $('start').addEventListener('click', async () => {
     canvas.height = video.videoHeight;
     status('Loading hand model...');
     tracker = await createHandTracker();
-    status('Ready. Show your left hand.');
+    status('Ready. Show your chord hand (cyan).');
     startLoop();
   } catch (e) {
     status(cameraErrorMessage(e));
@@ -131,9 +131,32 @@ const rekey = () => {
   playingKey = null; lastNotes = null; degStab.value = null;
   $('key').disabled = $('mode').value === 'free';
 };
-$('key').addEventListener('change', rekey);
-$('mode').addEventListener('change', rekey);
-$('ctype').addEventListener('change', rekey);
-$('inv').addEventListener('change', rekey);
+// Persist Key, Mode, Chord type and Inversion. Missing or invalid values fall back to HTML defaults.
+const SETTINGS_KEY = 'signa.settings';
+const SETTING_IDS = ['key', 'mode', 'ctype', 'inv'];
+
+function restoreSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') || {};
+    for (const id of SETTING_IDS) {
+      const v = saved[id];
+      const sel = $(id);
+      if (typeof v === 'string' && Array.from(sel.options).some(o => o.value === v)) sel.value = v;
+    }
+  } catch (e) { /* storage unavailable or corrupt: keep defaults */ }
+}
+
+function saveSettings() {
+  try {
+    const out = {};
+    for (const id of SETTING_IDS) out[id] = $(id).value;
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(out));
+  } catch (e) { /* storage unavailable: ignore */ }
+}
+
+for (const id of SETTING_IDS) {
+  $(id).addEventListener('change', () => { saveSettings(); rekey(); });
+}
+restoreSettings();
 rekey();
 window.addEventListener('pageshow', rekey);
