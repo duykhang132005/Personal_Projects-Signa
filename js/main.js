@@ -18,6 +18,9 @@ const ACC_LABEL = { '-1': 'flat', '0': 'natural', '1': 'sharp' };
 let lastTilt = 'diatonic';
 let playingKey = null;
 let lastNotes = null;
+let active = false;      // true between Start and Stop
+let stream = null;
+let silencedId = null;   // chord silenced by Space/Esc; stays silent until the chord changes
 
 function keyIndex() { return NOTE_NAMES.indexOf($('key').value); }
 
@@ -26,6 +29,7 @@ function update(degree, tilt, acc, mod) {
   if (degree == null) return;
   if (degree === 0) {
     if (playingKey !== null) { synth.release(); playingKey = null; }
+    silencedId = null;
     $('degree').textContent = '-';
     $('chord').textContent = 'muted';
     $('quality').textContent = '-';
@@ -35,7 +39,8 @@ function update(degree, tilt, acc, mod) {
   const base = buildChord(keyIndex(), $('mode').value, degree, lastTilt, 4, $('ctype').value, acc || 0, mod || null);
   const c = invertChord(base, $('inv').value, lastNotes);
   const id = c.name + c.notes.join(',');
-  if (id !== playingKey) { synth.play(c.notes, c.bass); playingKey = id; lastNotes = c.notes; }
+  if (silencedId !== null && id !== silencedId) silencedId = null;
+  if (id !== playingKey && id !== silencedId) { synth.play(c.notes, c.bass); playingKey = id; lastNotes = c.notes; }
   $('qbadge').hidden = !mod;
   $('degree').textContent = c.free ? 'Free' + (acc ? ' ' + (acc > 0 ? '#' : 'b') : '') : degree;
   $('chord').textContent = c.free ? c.name : c.roman + ' ' + c.name;
@@ -79,10 +84,44 @@ function loop() {
   rafId = requestAnimationFrame(loop);
 }
 
+function showMuted() {
+  $('degree').textContent = '-';
+  $('chord').textContent = 'muted';
+  $('quality').textContent = '-';
+  $('qbadge').hidden = true;
+}
+
+// Space/Esc: release the current chord. It replays when the chord changes or after a fist.
+function silence() {
+  if (!synth || playingKey === null) return;
+  synth.release();
+  silencedId = playingKey;
+  playingKey = null;
+  showMuted();
+}
+
+function stopPlaying() {
+  active = false;
+  stopLoop();
+  if (synth) synth.release();
+  playingKey = null; silencedId = null; degStab.value = null;
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  video.srcObject = null;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  showMuted();
+  $('gesture').textContent = '-';
+  // Suspend after the release fade so restarting does not replay a frozen tail.
+  setTimeout(() => { if (!active && synth) synth.suspend(); }, 1600);
+  $('start').textContent = 'Start playing';
+  status('Stopped. Press Start to play again.');
+}
+
 $('start').addEventListener('click', async () => {
+  if (active) { stopPlaying(); return; }
   $('start').disabled = true;
   try {
-    synth = new PadSynth();
+    if (!synth) synth = new PadSynth();
+    synth.setPreset($('sound').value);
     await synth.resume();
     if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       status('Camera needs a secure page. Open it via http://localhost:8000 (not the Network IP).');
@@ -90,19 +129,22 @@ $('start').addEventListener('click', async () => {
       return;
     }
     status('Starting camera...');
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false });
+    stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false });
     video.srcObject = stream;
     await video.play();
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     status('Loading hand model...');
-    tracker = await createHandTracker();
+    if (!tracker) tracker = await createHandTracker();
+    active = true;
+    $('start').textContent = 'Stop';
     status('Ready. Show your chord hand (cyan).');
-    startLoop();
+    if (!document.hidden) startLoop();
   } catch (e) {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
     status(cameraErrorMessage(e));
-    $('start').disabled = false;
   }
+  $('start').disabled = false;
 });
 
 function cameraErrorMessage(e) {
@@ -122,18 +164,27 @@ document.addEventListener('visibilitychange', () => {
     stopLoop();
     if (synth) synth.release();
     playingKey = null; // chord retriggers on return
-  } else if (tracker) {
-    startLoop();
+  } else if (active && tracker) {
+    startLoop(); // never restarts while stopped
   }
 });
 
+document.addEventListener('keydown', (e) => {
+  if (e.key !== ' ' && e.key !== 'Escape') return;
+  const tag = document.activeElement && document.activeElement.tagName;
+  if (tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA') return;
+  if (e.key === ' ') e.preventDefault(); // no page scroll, no Start/Stop button press
+  silence();
+});
+
 const rekey = () => {
+  if (synth) synth.setPreset($('sound').value);
   playingKey = null; lastNotes = null; degStab.value = null;
   $('key').disabled = $('mode').value === 'free';
 };
-// Persist Key, Mode, Chord type and Inversion. Missing or invalid values fall back to HTML defaults.
+// Persist Key, Mode, Chord type, Inversion and Sound. Missing or invalid values fall back to HTML defaults.
 const SETTINGS_KEY = 'signa.settings';
-const SETTING_IDS = ['key', 'mode', 'ctype', 'inv'];
+const SETTING_IDS = ['key', 'mode', 'ctype', 'inv', 'sound'];
 
 function restoreSettings() {
   try {

@@ -14,6 +14,7 @@ Signa tracks two hands by role. The chord hand is drawn cyan on the overlay and 
 | Rock sign (index + pinky, thumb tucked) | Degree 6 |
 | I-love-you sign (thumb + index + pinky) | Degree 7 |
 | Fist | Mute (release) |
+| Space or Esc key | Silence the current chord (it plays again when the chord changes or after a fist) |
 | Chord hand upright | Diatonic chord for the degree |
 | Tilt inward (toward body center) | Force major |
 | Tilt outward | Force minor |
@@ -37,6 +38,8 @@ Chord type: Triad plays 3-note chords. 7th plays diatonic 7ths when upright (I m
 
 Inversion (Sound card, default Off): Off plays root position exactly as before. 1st, 2nd and 3rd raise the lowest chord tones by an octave (3rd only applies to 4-note chords and is clamped otherwise). Voice leading picks the inversion closest to the previous chord so chords move smoothly. Inverted chords show the bass as a slash chord, e.g. C/E, and the bass note follows the lowest chord tone.
 
+Sound (Sound card, default Synth): Synth is the original detuned pad. Lo-fi is a soft, warm, slightly wobbly pad with faint hiss. Piano is a struck tone that fades to a quiet sustain and darkens as it rings. Brass is a bright sawtooth with a swelling filter and slight vibrato. All sounds are synthesized in the browser; changing Sound releases the current chord and the next chord uses the new sound.
+
 Default key is C major. Use the Key and Mode selectors to change it.
 
 Free (no key) mode: degrees 1 to 7 play the natural roots C D E F G A B. Upright or inward tilt plays major, outward tilt plays minor. The Key selector is disabled in this mode.
@@ -57,7 +60,7 @@ npx serve .
 
 Then open http://localhost:8000 (or the URL `serve` prints) and press Start. Allow camera access.
 
-If the status says the camera needs a secure page, open http://localhost:8000 instead of the Network IP address that `serve` also prints. Tracking and sound pause while the tab is hidden. Key, Mode, Chord type and Inversion are saved in your browser (localStorage) and restored on the next visit; Inversion starts Off on a first visit.
+If the status says the camera needs a secure page, open http://localhost:8000 instead of the Network IP address that `serve` also prints. Tracking and sound pause while the tab is hidden. After starting, the button becomes Stop, which silences the pad, turns off the camera and pauses audio; press Start to resume. A light limiter on the output keeps loud chords from clipping. Key, Mode, Chord type, Inversion and Sound are saved in your browser (localStorage) and restored on the next visit; Inversion starts Off on a first visit.
 
 ## Privacy
 
