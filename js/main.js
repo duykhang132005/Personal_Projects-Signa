@@ -1,4 +1,8 @@
-import { createHandTracker, findUserLeftHand, findUserRightHand, drawHands } from './hands.js';
+import { createHandTracker, findUserLeftHand, findUserRightHand, drawHands, HAND_COLORS } from './hands.js';
+
+const cssVar = (name, fallback) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+HAND_COLORS.chord = cssVar('--hand-chord', '#7fd');
+HAND_COLORS.quality = cssVar('--hand-quality', '#ffa94d');
 import { classifyDegree, classifyTilt, classifyAccidental, classifyModifier, Stabilizer, STABLE_FRAMES, M7B5_STABLE_FRAMES } from './gestures.js';
 import { buildChord, invertChord, NOTE_NAMES } from './music.js';
 import { PadSynth } from './synth.js';

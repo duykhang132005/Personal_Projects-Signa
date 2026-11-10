@@ -63,6 +63,9 @@ function drawBands(ctx, w, h) {
 }
 
 // Canvas is mirrored via CSS, so draw in raw image coordinates.
+// Overlay colors, filled from CSS tokens in main.js at startup.
+export const HAND_COLORS = { chord: '#7fd', quality: '#ffa94d' };
+
 export function drawHands(ctx, result, leftHand, rightHand) {
   const { width: w, height: h } = ctx.canvas;
   ctx.clearRect(0, 0, w, h);
@@ -71,7 +74,7 @@ export function drawHands(ctx, result, leftHand, rightHand) {
   for (const lm of result.landmarks) {
     const isLeft = lm === leftHand;
     const isRight = lm === rightHand;
-    ctx.strokeStyle = isLeft ? '#7fd' : isRight ? '#ffa94d' : '#666';
+    ctx.strokeStyle = isLeft ? HAND_COLORS.chord : isRight ? HAND_COLORS.quality : '#666';
     ctx.lineWidth = isLeft || isRight ? 3 : 2;
     ctx.beginPath();
     for (const [a, b] of LINKS) {
