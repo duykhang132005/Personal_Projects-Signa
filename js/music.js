@@ -35,7 +35,31 @@ function forcedSeventh(q, type) {
   return q === 'min' ? 'm7' : 'm7b5';
 }
 
-function nameRoot(pc, acc) { return (acc < 0 ? FLAT_NAMES : NOTE_NAMES)[pc]; }
+const LETTERS = ['C','D','E','F','G','A','B'];
+const LETTER_PC = [0,2,4,5,7,9,11];
+const ACC_MARK = { 0: '', 1: '#', 2: '##', 10: 'bb', 11: 'b' };
+
+// Spell a pitch as a scale degree of the key, using the tonic's letter from the Key selector.
+function spellDiatonic(keyIndex, degreeIndex, pc) {
+  const li = (LETTERS.indexOf(NOTE_NAMES[keyIndex][0]) + degreeIndex) % 7;
+  const delta = (pc - LETTER_PC[li] + 12) % 12;
+  return LETTERS[li] + (ACC_MARK[delta] !== undefined ? ACC_MARK[delta] : NOTE_NAMES[pc]);
+}
+
+function spellInKey(keyIndex, mode, pc) {
+  const steps = SCALES[mode];
+  if (steps) {
+    for (let d = 0; d < 7; d++) {
+      if ((keyIndex + steps[d] + 120) % 12 === pc) return spellDiatonic(keyIndex, d, pc);
+    }
+  }
+  return NOTE_NAMES[pc];
+}
+
+function nameRoot(pc, acc, keyIndex, mode) {
+  if (acc === 0 && mode && mode !== 'free') return spellInKey(keyIndex, mode, pc);
+  return (acc < 0 ? FLAT_NAMES : NOTE_NAMES)[pc];
+}
 const ACC_PREFIX = { '-1': 'b', '0': '', '1': '#' };
 
 // quality: 'maj' | 'min' | 'dim'
@@ -69,7 +93,7 @@ export function buildChord(keyIndex, mode, degree, tilt, octave = 4, type = 'tri
   if (quality.startsWith('m') && !quality.startsWith('maj') || quality === 'dim') roman = roman.toLowerCase();
   if (quality === 'dim') roman += 'o';
   roman = ACC_PREFIX[acc] + roman;
-  return { roman, name: nameRoot(rootPc, acc) + QUALITIES[quality].suffix, notes, bass, source, acc };
+  return { roman, name: nameRoot(rootPc, acc, keyIndex, mode) + QUALITIES[quality].suffix, notes, bass, source, acc, keyIndex, mode };
 }
 
 function voice(rootMidi, quality) {
@@ -84,7 +108,7 @@ function buildFreeChord(degree, tilt, octave, type, acc, mod) {
   const quality = mod ? mod : SUS_TYPES[type] || forcedSeventh(base, type);
   const { notes, bass } = voice(12 * (octave + 1) + raw, quality);
   const source = mod ? 'hand: ' + mod : SUS_TYPES[type] ? 'sus' : tilt === 'minor' ? 'Free: tilt minor' : 'Free: major';
-  return { roman: 'Free', name: nameRoot(pc, acc) + QUALITIES[quality].suffix, notes, bass, source, free: true, acc };
+  return { roman: 'Free', name: nameRoot(pc, acc, 0, 'free') + QUALITIES[quality].suffix, notes, bass, source, free: true, acc };
 }
 
 // Inversions. mode: 'off' | '1' | '2' | '3' | 'voice'. Off returns the chord unchanged.
@@ -121,7 +145,8 @@ export function invertChord(c, mode, prevNotes) {
   const rootPc = (c.bass % 12 + 12) % 12;
   const lowPc = (notes[0] % 12 + 12) % 12;
   const bass = notes[0] - 12; // bass doubles the lowest chord tone an octave down
-  const name = lowPc === rootPc ? c.name : c.name + '/' + nameRoot(lowPc, c.acc);
+  const bassName = nameRoot(lowPc, c.acc, c.keyIndex, c.mode);
+  const name = lowPc === rootPc ? c.name : c.name + '/' + bassName;
   return { ...c, notes, bass, name };
 }
 

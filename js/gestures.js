@@ -1,6 +1,6 @@
 // Gesture classification for the user's left hand.
 // Accidental bands from palm-center normalized y (0 = top of frame).
-export const SHARP_Y = 0.50;            // above = sharp
+export const SHARP_Y = 0.30;            // above = sharp
 export const FLAT_Y = 0.80;             // below = flat
 export const ACC_HYSTERESIS = 0.04;     // band edges widen by this once inside
 export const TILT_DEAD_ZONE_DEG = 15;   // within +/- this = upright (diatonic)

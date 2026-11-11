@@ -60,6 +60,10 @@ npx serve .
 
 Then open http://localhost:8000 (or the URL `serve` prints) and press Start. Allow camera access.
 
+## Tests
+
+Run `npm test` (Node 18 or newer). The suite uses the built-in `node:test` runner and has no dependencies.
+
 If the status says the camera needs a secure page, open http://localhost:8000 instead of the Network IP address that `serve` also prints. Tracking and sound pause while the tab is hidden. After starting, the button becomes Stop, which silences the pad, turns off the camera and pauses audio; press Start to resume. A light limiter on the output keeps loud chords from clipping. Key, Mode, Chord type, Inversion and Sound are saved in your browser (localStorage) and restored on the next visit; Inversion starts Off on a first visit.
 
 ## Privacy
