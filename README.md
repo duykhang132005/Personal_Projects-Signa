@@ -15,6 +15,7 @@ Signa tracks two hands by role. The chord hand is drawn cyan on the overlay and 
 | I-love-you sign (thumb + index + pinky) | Degree 7 |
 | Fist | Mute (release) |
 | Space or Esc key | Silence the current chord (it plays again when the chord changes or after a fist) |
+| F key | Enter or leave full screen |
 | Chord hand upright | Diatonic chord for the degree |
 | Tilt inward (toward body center) | Force major |
 | Tilt outward | Force minor |

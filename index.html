@@ -22,7 +22,18 @@
     <div id="stage">
       <video id="video" playsinline muted aria-label="Camera preview"></video>
       <canvas id="overlay" aria-hidden="true"></canvas>
+      <div id="hud" class="hud" hidden>
+        <div class="hud-readout">
+          <div id="hud-chord" class="hud-chord">-</div>
+          <div id="hud-keymode" class="hud-keymode">C major</div>
+        </div>
+        <div class="hud-actions">
+          <button type="button" id="hud-start" class="pill-btn">Start playing</button>
+          <button type="button" id="hud-exit" class="pill-btn hud-exit">Exit full screen</button>
+        </div>
+      </div>
     </div>
+    <button type="button" id="fs-toggle" class="fs-toggle" aria-pressed="false" aria-label="Full screen camera">Full screen</button>
   </section>
   <aside class="side">
     <section class="card">
@@ -74,6 +85,7 @@
         <li><span>Thumb, index, pinky</span><b>Degree 7</b></li>
         <li><span>Fist</span><b>Mute</b></li>
         <li><span>Space or Esc key</span><b>Silence chord</b></li>
+        <li><span>F key</span><b>Full screen</b></li>
         <li><span>Tilt inward</span><b>Major</b></li>
         <li><span>Tilt outward</span><b>Minor</b></li>
         <li><span>Chord hand high / low</span><b>Sharp / Flat</b></li>

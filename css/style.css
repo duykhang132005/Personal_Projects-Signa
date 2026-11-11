@@ -84,3 +84,58 @@ select:disabled { opacity: 0.45; cursor: not-allowed; border-color: var(--line-d
   .pill-btn, select { transition: none; }
   .pill-btn:hover, .pill-btn:active { transform: none; }
 }
+
+.fs-toggle {
+  margin-top: 0.75rem; width: 100%; min-height: 44px; border: 2px solid var(--line);
+  border-radius: 999px; padding: 0.55rem 1rem; font: inherit; font-size: 1rem; font-weight: 600;
+  color: var(--ink); background: var(--card); cursor: pointer; transition: border-color 0.12s;
+}
+.fs-toggle:hover { border-color: var(--accent); }
+.fs-toggle[aria-pressed="true"] { background: var(--soft); }
+.hud {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 4;
+  display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap;
+  gap: 0.75rem; padding: 0.75rem; pointer-events: none;
+}
+.hud[hidden] { display: none; }
+.hud > * { pointer-events: auto; }
+.hud-readout {
+  background: var(--card);
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  color: var(--ink); border-radius: 1rem; padding: 0.55rem 0.9rem;
+  box-shadow: var(--shadow); max-width: min(22rem, 70%);
+}
+.hud-chord {
+  font-size: clamp(1.6rem, 5vw, 3rem); font-weight: 700; color: var(--accent-dark);
+  line-height: 1.1; font-variant-numeric: tabular-nums;
+}
+.hud-keymode { margin-top: 0.2rem; font-size: 1rem; color: var(--muted); }
+.hud-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: flex-end; }
+.hud-actions .pill-btn { width: auto; min-height: 44px; padding: 0.55rem 1.1rem; font-size: 1rem; }
+.hud-exit { background: var(--ink); box-shadow: none; }
+.hud-exit:hover { background: var(--muted); }
+
+#stage:fullscreen,
+#stage:-webkit-full-screen,
+body.is-fullscreen #stage {
+  position: fixed; inset: 0; width: 100vw; height: 100dvh; max-width: none;
+  aspect-ratio: auto; border-radius: 0; background: var(--ink); z-index: 20;
+}
+#stage:fullscreen #video, #stage:fullscreen #overlay,
+#stage:-webkit-full-screen #video, #stage:-webkit-full-screen #overlay,
+body.is-fullscreen #video, body.is-fullscreen #overlay {
+  object-fit: contain; inset: auto;
+}
+body.is-fullscreen { overflow: hidden; }
+body.is-fullscreen .app-header,
+body.is-fullscreen .side,
+body.is-fullscreen .fs-toggle { display: none; }
+@media (max-width: 800px) {
+  .hud { padding: 0.5rem; }
+  .hud-readout { max-width: 100%; }
+  .hud-actions { width: 100%; }
+  .hud-actions .pill-btn { flex: 1 1 auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fs-toggle { transition: none; }
+}
