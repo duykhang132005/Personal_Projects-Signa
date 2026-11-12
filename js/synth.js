@@ -22,7 +22,7 @@ export const PRESETS = {
   },
   piano: {
     oscs: [['sine', 0, 1, 1], ['triangle', 0, 2, 0.35], ['sine', 3, 3, 0.15], ['sine', -3, 4, 0.08]],
-    attack: 0.005, release: 0.5, decay: { sustain: 0.15, tau: 0.6 },
+    attack: 0.9, release: 0.5, decay: { sustain: 0.15, tau: 0.6 },
     filter: { start: 4500, peak: 4500, sustain: 900, tau: 0.8 }, q: 0.5
   },
   brass: {

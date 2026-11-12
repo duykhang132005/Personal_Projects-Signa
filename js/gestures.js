@@ -32,8 +32,10 @@ export function fingerStates(lm) {
   };
 }
 
-// Quality hand (code's 'right' hand): returns a QUALITIES key, or null if absent.
-const COUNT_QUALITY = ['maj', 'min', 'add9', 'maj', 'sus4', 'dom7'];
+// Quality hand (code's 'right' hand, orange). Most counts set a QUALITIES key
+// that overrides tilt. Five fingers returns '7th', an add-seventh modifier
+// that still respects tilt (minor tilt = m7). Absent hand returns null.
+const COUNT_QUALITY = ['maj', 'min', 'add9', 'maj', 'sus4', '7th'];
 export function classifyModifier(lm) {
   if (!lm) return null;
   const f = fingerStates(lm);

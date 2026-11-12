@@ -31,11 +31,11 @@ Signa tracks two hands by role. The chord hand is drawn cyan on the overlay and 
 | 1 finger | Minor |
 | 2 fingers | add9 |
 | 4 fingers | sus4 |
-| 5 fingers | Dominant 7 |
+| 5 fingers | Add a 7th (tilt still picks major or minor, so a minor tilt is m7) |
 | Index + ring + pinky (thumb and middle down) | m7b5 |
 | Absent | Fall back to tilt and Chord type |
 
-Chord type: Triad plays 3-note chords. 7th plays diatonic 7ths when upright (I maj7, ii m7, iii m7, IV maj7, V7, vi m7, vii m7b5), dominant 7 for forced or Free major, and m7 for minor. Maj7 is the same but uses maj7 for forced or Free major. Accidentals keep the chord quality and only move the root. Sus4 replaces the third in every chord and ignores tilt; accidentals still apply. When the quality hand is visible it sets the quality and overrides both tilt and the Chord type picker; accidentals still apply. With it out of frame, tilt and the picker work as before. A "Quality hand" badge appears next to the chord while it is in control. The m7b5 shape must be held for 8 frames (other shapes 4) so it is not triggered by accident.
+Chord type: Triad plays 3-note chords. 7th plays diatonic 7ths when upright (I maj7, ii m7, iii m7, IV maj7, V7, vi m7, vii m7b5), dominant 7 for forced or Free major, and m7 for minor. Maj7 is the same but uses maj7 for forced or Free major. Accidentals keep the chord quality and only move the root. Sus4 replaces the third in every chord and ignores tilt; accidentals still apply. When the quality hand is visible it sets the quality and overrides both tilt and the Chord type picker, except for an open five-finger hand, which only adds a 7th and still follows tilt: upright uses the diatonic 7th (I maj7, V7, and so on), a minor tilt is m7, and a major tilt is a dominant 7, or maj7 if Chord type is Maj7. Accidentals still apply. With the quality hand out of frame, tilt and the picker work as before. Degree 5 is still five fingers on the cyan chord hand. A "Quality hand" badge appears next to the chord while it is in control. The m7b5 shape must be held for 8 frames (other shapes 4) so it is not triggered by accident.
 
 Inversion (Sound card, default Off): Off plays root position exactly as before. 1st, 2nd and 3rd raise the lowest chord tones by an octave (3rd only applies to 4-note chords and is clamped otherwise). Voice leading picks the inversion closest to the previous chord so chords move smoothly. Inverted chords show the bass as a slash chord, e.g. C/E, and the bass note follows the lowest chord tone.
 
@@ -59,13 +59,13 @@ or
 npx serve .
 ```
 
-Then open http://localhost:8000 (or the URL `serve` prints) and press Start. Allow camera access.
+Each command uses its own port. `python -m http.server 8000` serves on http://localhost:8000, and `npx serve .` serves on http://localhost:3000 by default (add `-l 8000` to use 8000 instead). The page only loads while that command is running. Open the matching localhost address, press Start, and allow camera access.
+
+If the status says the camera needs a secure page, open the localhost address instead of the Network IP address that `serve` also prints. Tracking and sound pause while the tab is hidden. After starting, the button becomes Stop, which silences the pad, turns off the camera and pauses audio; press Start to resume. A light limiter on the output keeps loud chords from clipping. Key, Mode, Chord type, Inversion and Sound are saved in your browser (localStorage) and restored on the next visit; Inversion starts Off on a first visit.
 
 ## Tests
 
 Run `npm test` (Node 18 or newer). The suite uses the built-in `node:test` runner and has no dependencies.
-
-If the status says the camera needs a secure page, open http://localhost:8000 instead of the Network IP address that `serve` also prints. Tracking and sound pause while the tab is hidden. After starting, the button becomes Stop, which silences the pad, turns off the camera and pauses audio; press Start to resume. A light limiter on the output keeps loud chords from clipping. Key, Mode, Chord type, Inversion and Sound are saved in your browser (localStorage) and restored on the next visit; Inversion starts Off on a first visit.
 
 ## Privacy
 

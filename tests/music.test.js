@@ -27,6 +27,35 @@ describe('buildChord diatonic qualities', () => {
   });
 });
 
+describe('quality-hand 7th modifier', () => {
+  const seventh = (degree, tilt, type = 'triad') =>
+    buildChord(0, 'major', degree, tilt, 4, type, 0, '7th');
+
+  it('keeps degree 5 as G when the quality hand is absent', () => {
+    assert.equal(triad('major', 5).name, 'G');
+  });
+
+  it('adds a minor 7th when the 7th modifier is combined with a minor tilt', () => {
+    assert.equal(seventh(1, 'minor').name, 'Cm7');
+    assert.equal(buildChord(0, 'free', 6, 'minor', 4, 'triad', 0, '7th').name, 'Am7');
+  });
+
+  it('uses diatonic 7ths when upright, including degree 5 as G7', () => {
+    assert.equal(seventh(1, 'diatonic').name, 'Cmaj7');
+    assert.equal(seventh(5, 'diatonic').name, 'G7');
+    assert.equal(seventh(6, 'diatonic').name, 'Am7');
+  });
+
+  it('uses dominant 7 for a major tilt, or maj7 when Chord type is Maj7', () => {
+    assert.equal(seventh(1, 'major').name, 'C7');
+    assert.equal(seventh(1, 'major', 'maj7').name, 'Cmaj7');
+  });
+
+  it('still spells m7b5 when that quality is set directly', () => {
+    assert.equal(buildChord(0, 'major', 7, 'diatonic', 4, 'triad', 0, 'm7b5').name, 'Bm7b5');
+  });
+});
+
 describe('buildChord Free mode and accidentals', () => {
   it('maps degrees 1 to 7 to natural roots C through B, major when upright', () => {
     const names = [1, 2, 3, 4, 5, 6, 7].map((d) => triad('free', d).name);
@@ -76,7 +105,7 @@ describe('invertChord', () => {
 describe('madd9 placeholder', () => {
   it('keeps madd9 defined but unreachable from UI paths', () => {
     assert.ok(QUALITIES.madd9);
-    const mods = [null, 'maj', 'min', 'add9', 'sus4', 'dom7', 'm7b5'];
+    const mods = [null, 'maj', 'min', 'add9', 'sus4', 'dom7', 'm7b5', '7th'];
     const types = ['triad', '7th', 'maj7', 'sus4'];
     for (const mode of ['major', 'minor', 'free']) {
       for (const degree of [1, 2, 3, 4, 5, 6, 7]) {

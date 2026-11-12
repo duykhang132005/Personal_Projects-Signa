@@ -35,6 +35,16 @@ function forcedSeventh(q, type) {
   return q === 'min' ? 'm7' : 'm7b5';
 }
 
+// Diatonic 7ths when upright; otherwise follow the Chord type picker
+// (Maj7 forces major to maj7, anything else forces major to dominant 7).
+function applySeventh(quality, source, steps, d, type) {
+  if (source === 'diatonic' && steps) {
+    const sev = (steps[(d + 6) % 7] - steps[d] + 12) % 12;
+    return quality === 'maj' ? (sev === 11 ? 'maj7' : 'dom7') : quality === 'min' ? 'm7' : 'm7b5';
+  }
+  return forcedSeventh(quality, type === 'maj7' ? 'maj7' : '7th');
+}
+
 const LETTERS = ['C','D','E','F','G','A','B'];
 const LETTER_PC = [0,2,4,5,7,9,11];
 const ACC_MARK = { 0: '', 1: '#', 2: '##', 10: 'bb', 11: 'b' };
@@ -78,13 +88,13 @@ export function buildChord(keyIndex, mode, degree, tilt, octave = 4, type = 'tri
   let source = 'diatonic';
   if (tilt === 'major') { quality = 'maj'; source = 'tilt: forced major'; }
   if (tilt === 'minor') { quality = 'min'; source = 'tilt: forced minor'; }
-  if (mod) { quality = mod; source = 'hand: ' + mod; }
+  if (mod === '7th') {
+    quality = applySeventh(quality, source, steps, d, type);
+    source = source + ', hand: 7th';
+  } else if (mod) { quality = mod; source = 'hand: ' + mod; }
   else if (SUS_TYPES[type]) { quality = SUS_TYPES[type]; source = 'sus'; }
   else if (type !== 'triad') {
-    if (source === 'diatonic') {
-      const sev = (steps[(d + 6) % 7] - steps[d] + 12) % 12;
-      quality = quality === 'maj' ? (sev === 11 ? 'maj7' : 'dom7') : quality === 'min' ? 'm7' : 'm7b5';
-    } else quality = forcedSeventh(quality, type);
+    quality = applySeventh(quality, source, steps, d, type);
   }
   const rootPc = (keyIndex + steps[d] + acc + 12) % 12;
   const rootMidi = 12 * (octave + 1) + keyIndex + steps[d] + acc;
@@ -105,9 +115,19 @@ function buildFreeChord(degree, tilt, octave, type, acc, mod) {
   const raw = NATURALS[degree - 1] + acc;
   const pc = (raw + 12) % 12;
   const base = tilt === 'minor' ? 'min' : 'maj';
-  const quality = mod ? mod : SUS_TYPES[type] || forcedSeventh(base, type);
+  const sourceBase = tilt === 'minor' ? 'Free: tilt minor' : 'Free: major';
+  let quality, source;
+  if (mod === '7th') {
+    quality = applySeventh(base, 'forced', null, 0, type);
+    source = sourceBase + ', hand: 7th';
+  } else if (mod) {
+    quality = mod;
+    source = 'hand: ' + mod;
+  } else {
+    quality = SUS_TYPES[type] || forcedSeventh(base, type);
+    source = SUS_TYPES[type] ? 'sus' : sourceBase;
+  }
   const { notes, bass } = voice(12 * (octave + 1) + raw, quality);
-  const source = mod ? 'hand: ' + mod : SUS_TYPES[type] ? 'sus' : tilt === 'minor' ? 'Free: tilt minor' : 'Free: major';
   return { roman: 'Free', name: nameRoot(pc, acc, 0, 'free') + QUALITIES[quality].suffix, notes, bass, source, free: true, acc };
 }
 

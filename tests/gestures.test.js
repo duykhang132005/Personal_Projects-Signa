@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  classifyDegree, classifyTilt, Stabilizer,
+  classifyDegree, classifyTilt, classifyModifier, Stabilizer,
   STABLE_FRAMES, M7B5_STABLE_FRAMES
 } from '../js/gestures.js';
 import { makeHand, fist, count, rock, ily } from './hands-fixture.js';
@@ -21,6 +21,22 @@ describe('classifyDegree', () => {
 
   it('maps the I-love-you sign (thumb, index, and pinky) to degree 7', () => {
     assert.equal(classifyDegree(ily()), 7);
+  });
+});
+
+
+describe('classifyModifier', () => {
+  it('keeps five fingers on the chord hand as degree 5, not a 7th', () => {
+    assert.equal(classifyDegree(count(5)), 5);
+  });
+
+  it('treats five fingers on the quality hand as an add-7th modifier', () => {
+    assert.equal(classifyModifier(count(5)), '7th');
+  });
+
+  it('still maps the m7b5 shape before plain finger counts', () => {
+    const lm = makeHand({ index: true, ring: true, pinky: true });
+    assert.equal(classifyModifier(lm), 'm7b5');
   });
 });
 
