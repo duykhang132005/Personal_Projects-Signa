@@ -1,11 +1,11 @@
-// MediaPipe HandLandmarker wrapper (loaded from CDN).
+// MediaPipe HandLandmarker, loaded from vendored tasks-vision 0.10.14.
 import { SHARP_Y, FLAT_Y } from './gestures.js';
-const VISION_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
-const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+const VISION_URL = new URL('../vendor/mediapipe/0.10.14/', import.meta.url).href;
+const MODEL_URL = new URL('../vendor/models/hand_landmarker.task', import.meta.url).href;
 
 export async function createHandTracker() {
-  const { FilesetResolver, HandLandmarker } = await import(VISION_URL + '/vision_bundle.mjs');
-  const fileset = await FilesetResolver.forVisionTasks(VISION_URL + '/wasm');
+  const { FilesetResolver, HandLandmarker } = await import(new URL('vision_bundle.mjs', VISION_URL).href);
+  const fileset = await FilesetResolver.forVisionTasks(new URL('wasm', VISION_URL).href);
   const opts = (delegate) => ({
     baseOptions: { modelAssetPath: MODEL_URL, delegate },
     runningMode: 'VIDEO',
