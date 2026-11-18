@@ -63,6 +63,19 @@
         <label class="field">Sound
           <select id="sound"><option value="synth">Synth</option><option value="lofi">Lo-fi</option><option value="piano">Piano</option><option value="brass">Brass</option></select>
         </label>
+        <label class="field">Octave
+          <select id="octave">
+            <option value="-1">-1</option>
+            <option value="0" selected>0</option>
+            <option value="1">+1</option>
+          </select>
+        </label>
+        <label class="field field-wide" for="volume">Volume
+          <span class="volume-row">
+            <input id="volume" type="range" min="0" max="100" value="50" step="1" aria-valuetext="50 percent">
+            <span id="volume-readout" class="volume-readout">50</span>
+          </span>
+        </label>
       </div>
     </section>
     <section class="card now" id="readout">

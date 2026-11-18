@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildChord, invertChord, QUALITIES } from '../js/music.js';
+import { buildChord, invertChord, QUALITIES, octaveFromOffset, BASE_OCTAVE } from '../js/music.js';
 
 const triad = (mode, degree, tilt = 'diatonic', acc = 0, type = 'triad') =>
   buildChord(0, mode, degree, tilt, 4, type, acc, null);
@@ -99,6 +99,29 @@ describe('invertChord', () => {
     const third = invertChord(g7, '3', null);
     assert.equal(third.name, 'G7/F');
     assert.deepEqual(third.notes, [77, 79, 83, 86]);
+  });
+});
+
+describe('octave offsets', () => {
+  it('maps Sound card offsets -1, 0, and +1 to octaves 3, 4, and 5', () => {
+    assert.equal(BASE_OCTAVE, 4);
+    assert.equal(octaveFromOffset(0), 4);
+    assert.equal(octaveFromOffset(-1), 3);
+    assert.equal(octaveFromOffset(1), 5);
+    assert.equal(octaveFromOffset('0'), 4);
+    assert.equal(octaveFromOffset('nope'), 4);
+  });
+
+  it('shifts the chord and bass by 12 MIDI steps per octave', () => {
+    const c4 = buildChord(0, 'major', 1, 'diatonic', 4);
+    const c3 = buildChord(0, 'major', 1, 'diatonic', octaveFromOffset(-1));
+    const c5 = buildChord(0, 'major', 1, 'diatonic', octaveFromOffset(1));
+    assert.deepEqual(c4.notes, [60, 64, 67]);
+    assert.equal(c4.bass, 48);
+    assert.deepEqual(c3.notes, c4.notes.map((n) => n - 12));
+    assert.equal(c3.bass, c4.bass - 12);
+    assert.deepEqual(c5.notes, c4.notes.map((n) => n + 12));
+    assert.equal(c5.bass, c4.bass + 12);
   });
 });
 

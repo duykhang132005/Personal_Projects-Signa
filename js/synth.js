@@ -34,10 +34,11 @@ export const PRESETS = {
 };
 
 export class PadSynth {
-  constructor() {
+  constructor(masterGain = 0.5) {
     this.ctx = new AudioContext();
     this.master = this.ctx.createGain();
-    this.master.gain.value = 0.5;
+    const initial = Math.min(1, Math.max(0, Number(masterGain)));
+    this.master.gain.value = Number.isFinite(initial) ? initial : 0.5;
     // Light output limiter: catches peaks, transparent at normal levels.
     this.limiter = this.ctx.createDynamicsCompressor();
     this.limiter.threshold.value = -6;
@@ -52,6 +53,18 @@ export class PadSynth {
     this.fading = [];
   }
   resume() { return this.ctx.resume(); }
+
+  // level is 0 to 1. Ramp with setTargetAtTime to avoid clicks; use immediate when the context is new.
+  setMasterVolume(level, immediate = false) {
+    const v = Math.min(1, Math.max(0, Number(level)));
+    const g = this.master.gain;
+    const now = this.ctx.currentTime;
+    g.cancelScheduledValues(now);
+    g.setValueAtTime(g.value, now);
+    if (immediate) g.setValueAtTime(Number.isFinite(v) ? v : 0, now);
+    else g.setTargetAtTime(Number.isFinite(v) ? v : 0, now, 0.03);
+  }
+
   suspend() { return this.ctx.suspend(); }
 
   // Switch preset: release the sounding chord so the next one uses the new sound.

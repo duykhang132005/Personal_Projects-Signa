@@ -1,5 +1,13 @@
 // Scales, diatonic chords, and naming.
 export const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+export const BASE_OCTAVE = 4;
+
+// Sound card Octave values -1, 0, +1 map to MIDI octaves 3, 4, 5.
+export function octaveFromOffset(offset) {
+  const n = Number(offset);
+  return BASE_OCTAVE + (n === -1 || n === 1 ? n : 0);
+}
+
 const FLAT_NAMES = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
 const SCALES = { major: [0,2,4,5,7,9,11], minor: [0,2,3,5,7,8,10] };
 const ROMAN = ['I','II','III','IV','V','VI','VII'];

@@ -4,7 +4,7 @@ const cssVar = (name, fallback) => getComputedStyle(document.documentElement).ge
 HAND_COLORS.chord = cssVar('--hand-chord', '#7fd');
 HAND_COLORS.quality = cssVar('--hand-quality', '#ffa94d');
 import { classifyDegree, classifyTilt, classifyAccidental, classifyModifier, Stabilizer, STABLE_FRAMES, M7B5_STABLE_FRAMES } from './gestures.js';
-import { buildChord, invertChord, NOTE_NAMES } from './music.js';
+import { buildChord, invertChord, NOTE_NAMES, octaveFromOffset } from './music.js';
 import { PadSynth } from './synth.js';
 import { isTypingTarget, shortcutAction } from './keys.js';
 
@@ -57,7 +57,7 @@ function update(degree, tilt, acc, mod) {
     showMuted();
     return;
   }
-  const base = buildChord(keyIndex(), $('mode').value, degree, lastTilt, 4, $('ctype').value, acc || 0, mod || null);
+  const base = buildChord(keyIndex(), $('mode').value, degree, lastTilt, octaveFromOffset($('octave').value), $('ctype').value, acc || 0, mod || null);
   const c = invertChord(base, $('inv').value, lastNotes);
   const id = c.name + c.notes.join(',');
   if (silencedId !== null && id !== silencedId) silencedId = null;
@@ -141,7 +141,8 @@ $('start').addEventListener('click', async () => {
   if (active) { stopPlaying(); return; }
   setStartState($('start').textContent, true);
   try {
-    if (!synth) synth = new PadSynth();
+    if (!synth) synth = new PadSynth(pendingVolume);
+    else synth.setMasterVolume(pendingVolume, true);
     synth.setPreset($('sound').value);
     await synth.resume();
     if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -306,9 +307,30 @@ const rekey = () => {
   $('key').disabled = $('mode').value === 'free';
   syncHudMeta();
 };
-// Persist Key, Mode, Chord type, Inversion and Sound. Missing or invalid values fall back to HTML defaults.
+
+let pendingVolume = 0.5;
+
+function volumeFromInput() {
+  const n = Number($('volume').value);
+  if (!Number.isFinite(n)) return 0.5;
+  return Math.min(100, Math.max(0, n)) / 100;
+}
+
+function syncVolumeUi() {
+  const n = Math.round(volumeFromInput() * 100);
+  $('volume-readout').textContent = String(n);
+  $('volume').setAttribute('aria-valuetext', n + ' percent');
+}
+
+function applyVolume(ramp) {
+  pendingVolume = volumeFromInput();
+  syncVolumeUi();
+  if (synth) synth.setMasterVolume(pendingVolume, !ramp);
+}
+
+// Persist Key, Mode, Chord type, Inversion, Sound, Octave and Volume. Missing or invalid values fall back to HTML defaults.
 const SETTINGS_KEY = 'signa.settings';
-const SETTING_IDS = ['key', 'mode', 'ctype', 'inv', 'sound'];
+const SETTING_IDS = ['key', 'mode', 'ctype', 'inv', 'sound', 'octave'];
 
 function restoreSettings() {
   try {
@@ -318,6 +340,8 @@ function restoreSettings() {
       const sel = $(id);
       if (typeof v === 'string' && Array.from(sel.options).some(o => o.value === v)) sel.value = v;
     }
+    const vol = Number(saved.volume);
+    if (Number.isFinite(vol) && vol >= 0 && vol <= 100) $('volume').value = String(Math.round(vol));
   } catch (e) { /* storage unavailable or corrupt: keep defaults */ }
 }
 
@@ -325,6 +349,7 @@ function saveSettings() {
   try {
     const out = {};
     for (const id of SETTING_IDS) out[id] = $(id).value;
+    out.volume = String(Math.round(volumeFromInput() * 100));
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(out));
   } catch (e) { /* storage unavailable: ignore */ }
 }
@@ -332,6 +357,9 @@ function saveSettings() {
 for (const id of SETTING_IDS) {
   $(id).addEventListener('change', () => { saveSettings(); rekey(); });
 }
+$('volume').addEventListener('input', () => { applyVolume(true); saveSettings(); });
 restoreSettings();
+pendingVolume = volumeFromInput();
+syncVolumeUi();
 rekey();
 window.addEventListener('pageshow', rekey);

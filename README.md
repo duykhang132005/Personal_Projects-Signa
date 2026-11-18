@@ -52,6 +52,10 @@ Inversion (Sound card, default Off): Off plays root position exactly as before. 
 
 Sound (Sound card, default Synth): Synth is the original detuned pad. Lo-fi is a soft, warm, slightly wobbly pad with faint hiss. Piano fades in over 0.9 seconds like Lo-fi, then settles to a quiet sustain and darkens as it rings. Brass is a bright sawtooth with a swelling filter and slight vibrato. All sounds are synthesized in the browser; changing Sound releases the current chord and the next chord uses the new sound.
 
+Octave (Sound card, default 0): -1, 0, or +1 shifts the pad down or up by one octave from the default (MIDI octave 4).
+
+Volume (Sound card, default 50): a 0 to 100 slider for overall loudness. 50 matches the original output level. The value is applied when you press Start if you change it first.
+
 Default key is C major. Use the Key and Mode selectors to change it.
 
 Free (no key) mode: degrees 1 to 7 play the natural roots C D E F G A B. Upright or inward tilt plays major, outward tilt plays minor. The Key selector is disabled in this mode.
@@ -72,7 +76,7 @@ npx serve .
 
 Each command uses its own port. `python -m http.server 8000` serves on http://localhost:8000, and `npx serve .` serves on http://localhost:3000 by default (add `-l 8000` to use 8000 instead). The page only loads while that command is running. Open the matching localhost address, press Start, and allow camera access.
 
-If the status says the camera needs a secure page, open the localhost address instead of the Network IP address that `serve` also prints. Tracking and sound pause while the tab is hidden. After starting, the button becomes Stop, which silences the pad, turns off the camera and pauses audio; press Start to resume. A light limiter on the output keeps loud chords from clipping. Key, Mode, Chord type, Inversion and Sound are saved in your browser (localStorage) and restored on the next visit; Inversion starts Off on a first visit.
+If the status says the camera needs a secure page, open the localhost address instead of the Network IP address that `serve` also prints. Tracking and sound pause while the tab is hidden. After starting, the button becomes Stop, which silences the pad, turns off the camera and pauses audio; press Start to resume. A light limiter on the output keeps loud chords from clipping. Key, Mode, Chord type, Inversion, Sound, Octave and Volume are saved in your browser (localStorage) and restored on the next visit; Inversion starts Off and Octave starts at 0 on a first visit.
 
 ## Tests
 
@@ -97,3 +101,10 @@ To update these files:
 ## Tuning
 
 Constants live in `js/gestures.js` (tilt dead zone, tilt threshold, stable frames) and `js/synth.js` (attack, release).
+
+## Roadmap
+
+These are planned, not built yet:
+
+- Volume, distortion, and waveform controls on the orange quality hand (the second hand, drawn orange in the camera view)
+- A metronome
