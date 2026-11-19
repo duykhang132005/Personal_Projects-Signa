@@ -7,6 +7,7 @@ import { classifyDegree, classifyTilt, classifyAccidental, classifyModifier, Sta
 import { buildChord, invertChord, NOTE_NAMES, octaveFromOffset } from './music.js';
 import { PadSynth } from './synth.js';
 import { isTypingTarget, shortcutAction } from './keys.js';
+import { startErrorMessage, handModelError } from './errors.js';
 
 const $ = (id) => document.getElementById(id);
 const video = $('video');
@@ -45,6 +46,7 @@ let lastNotes = null;
 let active = false;      // true between Start and Stop
 let stream = null;
 let silencedId = null;   // chord silenced by Space/Esc; stays silent until the chord changes
+let suspendTimer = null; // delayed synth.suspend() after Stop
 
 function keyIndex() { return NOTE_NAMES.indexOf($('key').value); }
 
@@ -132,13 +134,18 @@ function stopPlaying() {
   showMuted();
   $('gesture').textContent = '-';
   // Suspend after the release fade so restarting does not replay a frozen tail.
-  setTimeout(() => { if (!active && synth) synth.suspend(); }, 1600);
+  if (suspendTimer !== null) clearTimeout(suspendTimer);
+  suspendTimer = setTimeout(() => {
+    suspendTimer = null;
+    if (!active && synth) synth.suspend();
+  }, 1600);
   setStartState('Start playing');
   status('Stopped. Press Start to play again.');
 }
 
 $('start').addEventListener('click', async () => {
   if (active) { stopPlaying(); return; }
+  if (suspendTimer !== null) { clearTimeout(suspendTimer); suspendTimer = null; }
   setStartState($('start').textContent, true);
   try {
     if (!synth) synth = new PadSynth(pendingVolume);
@@ -158,28 +165,27 @@ $('start').addEventListener('click', async () => {
     canvas.height = video.videoHeight;
     layoutPreview();
     status('Loading hand model...');
-    if (!tracker) tracker = await createHandTracker();
+    if (!tracker) {
+      try {
+        tracker = await createHandTracker();
+      } catch (e) {
+        console.error(e);
+        throw handModelError(e);
+      }
+    }
     active = true;
     setStartState('Stop');
     status('Ready. Show your chord hand (cyan).');
     if (!document.hidden) startLoop();
   } catch (e) {
     if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-    status(cameraErrorMessage(e));
+    video.srcObject = null;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (synth) synth.suspend();
+    status(startErrorMessage(e));
   }
   setStartState($('start').textContent, false);
 });
-
-function cameraErrorMessage(e) {
-  switch (e && e.name) {
-    case 'NotAllowedError':
-    case 'SecurityError': return 'Camera permission denied. Allow camera access in your browser.';
-    case 'NotFoundError':
-    case 'OverconstrainedError': return 'No camera found.';
-    case 'NotReadableError': return 'Camera is in use by another app.';
-    default: return 'Error: ' + (e && e.message ? e.message : e);
-  }
-}
 
 // Pause tracking and silence the pad while the tab is hidden.
 document.addEventListener('visibilitychange', () => {
