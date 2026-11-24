@@ -6,6 +6,19 @@ export const RELEASE = 1.2;
 export const MAX_VOICES = 3; // chord voices (current plus fading) allowed at once
 const CULL_FADE = 0.05;      // seconds to fade out a culled voice
 
+// Hold a param on its current ramp. cancelScheduledValues() before a .value
+// read snaps the gain and clicks, so use cancelAndHoldAtTime when it exists
+// and otherwise capture .value before cancelling.
+export function holdParam(param, now) {
+  if (typeof param.cancelAndHoldAtTime === 'function') {
+    param.cancelAndHoldAtTime(now);
+    return;
+  }
+  const held = param.value;
+  param.cancelScheduledValues(now);
+  param.setValueAtTime(held, now);
+}
+
 // Sound presets. Each osc: [type, detune cents, frequency ratio, relative gain].
 // attack/release in seconds. decay: { sustain, tau } makes a percussive envelope.
 // filter: { start, peak, sustain, tau } is a cutoff envelope; a number is a fixed cutoff.
@@ -59,8 +72,7 @@ export class PadSynth {
     const v = Math.min(1, Math.max(0, Number(level)));
     const g = this.master.gain;
     const now = this.ctx.currentTime;
-    g.cancelScheduledValues(now);
-    g.setValueAtTime(g.value, now);
+    holdParam(g, now);
     if (immediate) g.setValueAtTime(Number.isFinite(v) ? v : 0, now);
     else g.setTargetAtTime(Number.isFinite(v) ? v : 0, now, 0.03);
   }
@@ -154,8 +166,7 @@ export class PadSynth {
   release(now = this.ctx.currentTime) {
     if (!this.current) return;
     const { env, oscs, release } = this.current;
-    env.gain.cancelScheduledValues(now);
-    env.gain.setValueAtTime(env.gain.value, now);
+    holdParam(env.gain, now);
     env.gain.linearRampToValueAtTime(0, now + release);
     oscs.forEach(o => o.stop(now + release + 0.05));
     this.fading.push({ env, oscs, endsAt: now + release + 0.05 });
@@ -167,8 +178,7 @@ export class PadSynth {
     this.fading = this.fading.filter(v => v.endsAt > now);
     while (this.fading.length >= MAX_VOICES) {
       const { env, oscs } = this.fading.shift();
-      env.gain.cancelScheduledValues(now);
-      env.gain.setValueAtTime(env.gain.value, now);
+      holdParam(env.gain, now);
       env.gain.linearRampToValueAtTime(0, now + CULL_FADE);
       oscs.forEach(o => o.stop(now + CULL_FADE + 0.01));
     }

@@ -45,7 +45,7 @@ let playingKey = null;
 let lastNotes = null;
 let active = false;      // true between Start and Stop
 let stream = null;
-let silencedId = null;   // chord silenced by Space/Esc; stays silent until the chord changes
+let silencedId = null;   // chord silenced by Space/Esc; stays silent until the chord or a selector changes
 let suspendTimer = null; // delayed synth.suspend() after Stop
 
 function keyIndex() { return NOTE_NAMES.indexOf($('key').value); }
@@ -284,7 +284,10 @@ $('hud-start').addEventListener('click', () => $('start').click());
 document.addEventListener('keydown', (e) => {
   const action = shortcutAction(e.key, {
     typing: isTypingTarget(document.activeElement),
-    fullscreen: inFullscreen()
+    fullscreen: inFullscreen(),
+    ctrlKey: e.ctrlKey,
+    metaKey: e.metaKey,
+    altKey: e.altKey
   });
   if (!action) return;
   if (action === 'silence') {
@@ -307,9 +310,13 @@ document.addEventListener('keydown', (e) => {
 });
 
 
+// Release on every selector change so a sustaining chord stops and Space/Esc stays in sync.
 const rekey = () => {
-  if (synth) synth.setPreset($('sound').value);
-  playingKey = null; lastNotes = null; degStab.value = null;
+  if (synth) {
+    synth.release();
+    synth.setPreset($('sound').value);
+  }
+  playingKey = null; lastNotes = null; silencedId = null; degStab.value = null;
   $('key').disabled = $('mode').value === 'free';
   syncHudMeta();
 };
