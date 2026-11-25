@@ -1,4 +1,4 @@
-// Gesture classification for the user's left hand.
+// Gesture classification for the cyan chord hand. Khang's camera is inverted, so this hand is identified by color.
 // Accidental bands from palm-center normalized y (0 = top of frame).
 export const SHARP_Y = 0.30;            // above = sharp
 export const FLAT_Y = 0.80;             // below = flat
@@ -86,4 +86,6 @@ export class Stabilizer {
     if (this.count >= need) this.value = this.cand;
     return this.value;
   }
+  // Clear the committed value and the in-progress hold.
+  reset() { this.cand = null; this.count = 0; this.value = null; }
 }

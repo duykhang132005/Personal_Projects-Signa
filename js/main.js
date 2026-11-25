@@ -8,6 +8,7 @@ import { buildChord, invertChord, NOTE_NAMES, octaveFromOffset } from './music.j
 import { PadSynth } from './synth.js';
 import { isTypingTarget, shortcutAction } from './keys.js';
 import { startErrorMessage, handModelError } from './errors.js';
+import { setText } from './settext.js';
 
 const $ = (id) => document.getElementById(id);
 const video = $('video');
@@ -15,10 +16,17 @@ const canvas = $('overlay');
 const ctx = canvas.getContext('2d');
 const status = (t) => { $('status').textContent = t; };
 const stage = $('stage');
+// Looked up once; the camera loop only writes text when it changes.
+const gestureEl = $('gesture');
+const degreeEl = $('degree');
+const qualityEl = $('quality');
+const qbadgeEl = $('qbadge');
+const chordEl = $('chord');
+const hudChordEl = $('hud-chord');
 
 function setChordText(t) {
-  $('chord').textContent = t;
-  $('hud-chord').textContent = t;
+  setText(chordEl, t);
+  setText(hudChordEl, t);
 }
 function setStartState(text, disabled) {
   for (const id of ['start', 'hud-start']) {
@@ -64,10 +72,10 @@ function update(degree, tilt, acc, mod) {
   const id = c.name + c.notes.join(',');
   if (silencedId !== null && id !== silencedId) silencedId = null;
   if (id !== playingKey && id !== silencedId) { synth.play(c.notes, c.bass); playingKey = id; lastNotes = c.notes; }
-  $('qbadge').hidden = !mod;
-  $('degree').textContent = c.free ? 'Free' + (acc ? ' ' + (acc > 0 ? '#' : 'b') : '') : degree;
+  qbadgeEl.hidden = !mod;
+  setText(degreeEl, c.free ? 'Free' + (acc ? ' ' + (acc > 0 ? '#' : 'b') : '') : degree);
   setChordText(c.free ? c.name : c.roman + ' ' + c.name);
-  $('quality').textContent = c.source + (acc ? ', ' + ACC_LABEL[acc] : '');
+  setText(qualityEl, c.source + (acc ? ', ' + ACC_LABEL[acc] : ''));
 }
 
 let lastTime = -1;
@@ -98,20 +106,20 @@ function loop() {
       const raw = classifyDegree(left);
       const t = classifyTilt(left);
       const a = classifyAccidental(left, accStab.value || 0);
-      $('gesture').textContent = (raw === 0 ? 'fist' : raw) + ' / ' + t.tilt + ' (' + t.deg.toFixed(0) + ' deg) / ' + ACC_LABEL[a] + ' / Quality hand (orange): ' + (m || 'none');
+      setText(gestureEl, (raw === 0 ? 'fist' : raw) + ' / ' + t.tilt + ' (' + t.deg.toFixed(0) + ' deg) / ' + ACC_LABEL[a] + ' / Quality hand (orange): ' + (m || 'none'));
       update(degStab.push(raw), tiltStab.push(t.tilt), accStab.push(a), m);
     } else {
-      $('gesture').textContent = 'no chord hand';
+      setText(gestureEl, 'no chord hand');
     }
   }
   rafId = requestAnimationFrame(loop);
 }
 
 function showMuted() {
-  $('degree').textContent = '-';
+  setText(degreeEl, '-');
   setChordText('muted');
-  $('quality').textContent = '-';
-  $('qbadge').hidden = true;
+  setText(qualityEl, '-');
+  qbadgeEl.hidden = true;
 }
 
 // Space/Esc: release the current chord. It replays when the chord changes or after a fist.
@@ -127,12 +135,13 @@ function stopPlaying() {
   active = false;
   stopLoop();
   if (synth) synth.release();
-  playingKey = null; silencedId = null; degStab.value = null;
+  playingKey = null; silencedId = null; lastNotes = null;
+  degStab.reset(); tiltStab.reset(); accStab.reset(); modStab.reset();
   if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
   video.srcObject = null;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   showMuted();
-  $('gesture').textContent = '-';
+  setText(gestureEl, '-');
   // Suspend after the release fade so restarting does not replay a frozen tail.
   if (suspendTimer !== null) clearTimeout(suspendTimer);
   suspendTimer = setTimeout(() => {
@@ -193,6 +202,7 @@ document.addEventListener('visibilitychange', () => {
     stopLoop();
     if (synth) synth.release();
     playingKey = null; // chord retriggers on return
+    if (active) showMuted(); // clear the old chord name while the tab is hidden
   } else if (active && tracker) {
     startLoop(); // never restarts while stopped
   }

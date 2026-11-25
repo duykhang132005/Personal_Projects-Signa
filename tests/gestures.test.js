@@ -83,4 +83,26 @@ describe('Stabilizer', () => {
     t.push('min'); t.push('min'); t.push('min');
     assert.equal(t.push('min'), 'min');
   });
+
+  it('reset clears the committed value and the in-progress hold', () => {
+    const s = new Stabilizer();
+    s.push(2); s.push(2); s.push(2);
+    assert.equal(s.push(2), 2);
+    s.reset();
+    assert.equal(s.value, null);
+    assert.equal(s.push(2), null);
+    assert.equal(s.push(2), null);
+    assert.equal(s.push(2), null);
+    assert.equal(s.push(2), 2);
+  });
+
+  it('reset keeps the longer m7b5 hold', () => {
+    const s = new Stabilizer(STABLE_FRAMES, { m7b5: M7B5_STABLE_FRAMES });
+    for (let i = 0; i < M7B5_STABLE_FRAMES; i++) s.push('m7b5');
+    assert.equal(s.value, 'm7b5');
+    s.reset();
+    assert.equal(s.value, null);
+    for (let i = 0; i < M7B5_STABLE_FRAMES - 1; i++) assert.equal(s.push('m7b5'), null);
+    assert.equal(s.push('m7b5'), 'm7b5');
+  });
 });
